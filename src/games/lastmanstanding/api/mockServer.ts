@@ -1,4 +1,4 @@
-// MOCK BACKEND for Last Man Standing. Stands in for the real server until its contract exists (doc 10 Q1).
+// MOCK BACKEND for Last Man Standing. Stands in for the real server until its contract exists (docs/09-BACKEND-INTEGRATION.md, Q1).
 // It owns the fixture list, every match result, the prize ladder and the wallet; the UI only renders replies.
 // Maths follow the prototype: results are drawn from an OVR/ATT/DEF/CRE strength model fitted to PBF results,
 // the match odds carry no margin and the margin sits in the prize ladder (95% of 1/P(reach round) with best play).

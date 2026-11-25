@@ -23,24 +23,13 @@ export const markIntroSeen = () => writeFlag(SEEN_KEY);
 export const hasFtueDone = () => readFlag(FTUE_KEY);
 export const markFtueDone = () => writeFlag(FTUE_KEY);
 
-export type FtueStep = { title: string; body: string; cta: string };
+import type { HolKey } from './i18n';
 
-/** The real prototype's own 4-step coach copy (ftueCopy in the prototype's render()). */
-export const FTUE_STEPS: FtueStep[] = [
-  {
-    title: 'Higher or lower?',
-    body: 'Everyone sees the same player. The price changes with the player on screen. Lower rated cards are more likely to be followed by a higher one, while higher rated cards are more likely to be followed by a lower one.',
-    cta: 'Got it',
-  },
-  { title: 'Beat the clock', body: 'Make your pick before the countdown reaches zero.', cta: 'Next' },
-  {
-    title: 'Build your streak',
-    body: 'Choose Higher or Lower. Get it right and your current winnings are multiplied by the displayed price. Cash out during any countdown, or pick again to keep going.',
-    cta: 'Next',
-  },
-  {
-    title: 'Bigger move. Bigger price.',
-    body: "Back the next player's OVR to move by at least 2 or 3 for a bigger price. Small moves are the most common, so these pay more.",
-    cta: 'Play',
-  },
-];
+export type FtueStep = { title: HolKey; body: HolKey; cta: HolKey };
+
+/** The prototype's 4-step coach: translation keys, the English copy is in i18n/en.ts. */
+export const FTUE_STEPS: FtueStep[] = [1, 2, 3, 4].map((n) => ({
+  title: `hol.ftue.${n}.title` as HolKey,
+  body: `hol.ftue.${n}.body` as HolKey,
+  cta: `hol.ftue.${n}.cta` as HolKey,
+}));

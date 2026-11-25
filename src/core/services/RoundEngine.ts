@@ -1,5 +1,5 @@
 // Timed round phase machine shared by all games. It owns phases and timers only:
-// it never calls a backend and never decides an outcome (doc 03, services/round).
+// it never calls a backend and never decides an outcome (docs/01-ARCHITECTURE.md).
 
 export type PhaseDef<P extends string> = {
   /** Auto-advance after this many ms. Omit for phases that wait for advance() (e.g. "animation done"). */

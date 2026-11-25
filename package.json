@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "tsc --noEmit && node scripts/build.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "check": "npm run check:games && node --experimental-strip-types --no-warnings src/core/services/services.check.ts && node --experimental-strip-types --no-warnings src/games/higherlower/api/mockServer.check.ts && node --experimental-strip-types --no-warnings src/games/accacrash/api/mockServer.check.ts && node --experimental-strip-types --no-warnings src/games/lastmanstanding/api/mockServer.check.ts && node --experimental-strip-types --no-warnings src/core/pixi/viewConfig.check.ts && node --experimental-strip-types --no-warnings src/games/higherlower/scenes/config.check.ts && node --experimental-strip-types --no-warnings src/games/accacrash/scenes/config.check.ts",
+    "check": "npm run check:games && node --experimental-strip-types --no-warnings src/core/services/services.check.ts && node --experimental-strip-types --no-warnings src/games/higherlower/api/mockServer.check.ts && node --experimental-strip-types --no-warnings src/games/accacrash/api/mockServer.check.ts && node --experimental-strip-types --no-warnings src/games/lastmanstanding/api/mockServer.check.ts && node --experimental-strip-types --no-warnings src/core/pixi/viewConfig.check.ts && node --experimental-strip-types --no-warnings src/games/higherlower/scenes/config.check.ts && node --experimental-strip-types --no-warnings src/games/accacrash/scenes/config.check.ts && node --experimental-strip-types --no-warnings src/core/boot/loadQueue.check.ts && node --experimental-strip-types --no-warnings src/core/i18n/i18n.check.ts && node --experimental-strip-types --no-warnings src/core/round/round.check.ts",
     "check:games": "node scripts/check-games.mjs",
-    "new-game": "node scripts/new-game.mjs"
+    "new-game": "node scripts/new-game.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "pixi.js": "8.9.2",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.65.1",
     "@types/react": "^18.3.4",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.7.0",

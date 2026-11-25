@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
 import { formatMoney } from 'core/services/money';
+import { GameLayout } from 'core/ui/GameLayout';
 
 import type { Game, Team } from '../api/types';
 import { prizeFor, quality, qualityWord, short, slotOf, teamMap } from '../lib';
-import { Badge, HdaBar, HdaKey } from '../ui';
+import { Badge, HdaBar, HdaKey, type LayoutFrame } from '../ui';
 import { Guide } from './Guide';
 
 type Props = {
@@ -13,14 +14,14 @@ type Props = {
   busy: boolean;
   onPlay: (code: string) => void;
   onCashOut: () => void;
+  frame: LayoutFrame;
 };
 
 type Sort = 'now' | 'best' | 'rating';
 const ROUNDS = 20;
 
-export function Play({ game, currency, busy, onPlay, onCashOut }: Props) {
+export function Play({ game, currency, busy, onPlay, onCashOut, frame }: Props) {
   const teams = teamMap(game);
-  const [tab, setTab] = useState<'week' | 'plan'>('week');
   const [pick, setPick] = useState<string | null>(null);
   const bank = prizeFor(game, game.wins);
   const next = prizeFor(game, game.wins + 1);
@@ -28,40 +29,31 @@ export function Play({ game, currency, busy, onPlay, onCashOut }: Props) {
   const pickSlot = pick ? slotOf(game, game.gw, pick) : null;
 
   return (
-    <>
-      <div className="lms-stats">
-        <div className="pbf-card">
-          <small>Round</small>
-          <b>
-            {Math.min(game.wins + 1, ROUNDS)} of {ROUNDS}
-          </b>
-        </div>
-        <div className="pbf-card">
-          <small>Cash out now</small>
-          <b>{formatMoney(bank, currency)}</b>
-        </div>
-        <div className="pbf-card next">
-          <small>Win this round</small>
-          <b>{formatMoney(next, currency)}</b>
-        </div>
-      </div>
-      <button className="pbf-btn secondary lms-cash" disabled={game.wins < 1 || busy} onClick={onCashOut}>
-        {game.wins < 1 ? 'Cash out after round 1' : `Cash out ${formatMoney(bank, currency)}`}
-      </button>
-
-      <Ladder game={game} currency={currency} />
-
-      <div className="lms-tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'week'} onClick={() => setTab('week')}>
-          This game week
-        </button>
-        <button role="tab" aria-selected={tab === 'plan'} onClick={() => setTab('plan')}>
-          Fixture planner
-        </button>
-      </div>
-
-      {tab === 'week' ? (
+    <GameLayout
+      className="lastmanstanding lms-play"
+      header={
         <>
+          {frame.header}
+          <div className="lms-stats">
+            <div className="pbf-card">
+              <small>Round</small>
+              <b>
+                {Math.min(game.wins + 1, ROUNDS)} of {ROUNDS}
+              </b>
+            </div>
+            <div className="pbf-card">
+              <small>Cash out now</small>
+              <b>{formatMoney(bank, currency)}</b>
+            </div>
+            <div className="pbf-card next">
+              <small>Win this round</small>
+              <b>{formatMoney(next, currency)}</b>
+            </div>
+          </div>
+        </>
+      }
+      stage={
+        <section className="lms-week" aria-label={`Game week ${game.gw + 1}`}>
           <div className="lms-gwhead">
             <h3>
               Game week {game.gw + 1}
@@ -69,9 +61,6 @@ export function Play({ game, currency, busy, onPlay, onCashOut }: Props) {
             </h3>
             <HdaKey />
           </div>
-          <p className="lms-hint">
-            <b>Tap a team to pick them to win.</b> A win takes you through; a draw or defeat and you are out.
-          </p>
           <div className="lms-fixtures">
             {game.schedule[game.gw].map((f) => (
               <div className="pbf-card lms-mc" key={f.home}>
@@ -96,38 +85,48 @@ export function Play({ game, currency, busy, onPlay, onCashOut }: Props) {
               </div>
             ))}
           </div>
+        </section>
+      }
+      controls={
+        <>
           <div className="lms-lockbar">
             <p>
               {pick && pickSlot ? (
                 <>
-                  Your pick: <b>{teams.get(pick)!.name}</b>
-                  <br />
-                  {pickSlot.home ? 'Home to ' : 'Away at '}
+                  Your pick: <b>{teams.get(pick)!.name}</b> · {pickSlot.home ? 'home to ' : 'away at '}
                   {teams.get(pickSlot.opp)!.name}
                 </>
               ) : (
-                'Tap a team to back it'
+                'Tap a team above to back it to win'
               )}
             </p>
-            <button className="pbf-btn" disabled={!pick || busy} onClick={() => pick && onPlay(pick)}>
-              {busy ? 'Playing...' : 'Play game week'}
-            </button>
+            <div className="lms-actions">
+              <button className="pbf-btn secondary lms-cash" disabled={game.wins < 1 || busy} onClick={onCashOut}>
+                {game.wins < 1 ? 'Cash out after R1' : `Cash out ${formatMoney(bank, currency)}`}
+              </button>
+              <button className="pbf-btn" disabled={!pick || busy} onClick={() => pick && onPlay(pick)}>
+                {busy ? 'Playing...' : 'Play game week'}
+              </button>
+            </div>
           </div>
+          {frame.notice}
         </>
-      ) : (
-        <Planner
-          game={game}
-          teams={teams}
-          onBack={(code) => {
-            setPick(code);
-            setTab('week');
-          }}
-        />
-      )}
-
-      <TeamGrid game={game} pick={pick} onPick={choose} />
-      <Guide game={game} />
-    </>
+      }
+      infoLabel="Prize ladder, planner and rules"
+      info={
+        <>
+          <p className="lms-hint">
+            <b>Tap a team to pick them to win.</b> A win takes you through; a draw or defeat and you are out.
+          </p>
+          <Ladder game={game} currency={currency} />
+          <h3 className="lms-info-title">Fixture planner</h3>
+          <Planner game={game} teams={teams} onBack={(code) => setPick(code)} />
+          <TeamGrid game={game} pick={pick} onPick={choose} />
+          <Guide game={game} />
+          {frame.footer}
+        </>
+      }
+    />
   );
 }
 

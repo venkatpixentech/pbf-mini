@@ -8,7 +8,7 @@ import { type PhaseChange, RoundEngine } from './RoundEngine.ts';
 assert.equal(roundMoney(0.1 + 0.2), 0.3);
 assert.equal(roundMoney(1.005), 1.01);
 assert.equal(compareMoney(0.1 + 0.2, 0.3), 0);
-assert.equal(compareMoney(10.5, 2), 1); // the string comparison bug class from PBF (doc 01 D2)
+assert.equal(compareMoney(10.5, 2), 1); // the string comparison bug class from PBF (defect D2 in the archived PBF audit)
 assert.equal(formatMoney(1234.5), '£1,234.50');
 
 // round engine: timed phases advance by themselves, untimed ones wait, stop clears timers

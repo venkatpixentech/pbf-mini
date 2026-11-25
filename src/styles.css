@@ -1,31 +1,34 @@
-/* PBF theme: tokens from the Playbook Fusion design system (prototype bundles), fonts from PBF's own asset pack. */
+/* PBF theme: tokens from the Playbook Fusion design system (prototype bundles), fonts from PBF's own asset pack.
+   Fonts are WOFF2 (lossless conversion of PBF's TTF/OTF) and live in src so the build hashes them (immutable
+   caching, correct URLs at any deployment path). The four weights the first screen uses are preloaded by
+   the startup-hints plugin in vite.config.ts; Demi (600) loads on first use. */
 @font-face {
   font-family: 'Degular';
-  src: url('/assets/common/fonts/Degular-Black.ttf') format('truetype');
+  src: url('./core/assets/fonts/Degular-Black.woff2') format('woff2');
   font-weight: 900;
   font-display: swap;
 }
 @font-face {
   font-family: 'Degular';
-  src: url('/assets/common/fonts/Degular-Bold.ttf') format('truetype');
+  src: url('./core/assets/fonts/Degular-Bold.woff2') format('woff2');
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
   font-family: 'Avenir Next';
-  src: url('/assets/common/fonts/AvenirNextLTPro-Regular.otf') format('opentype');
+  src: url('./core/assets/fonts/AvenirNextLTPro-Regular.woff2') format('woff2');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'Avenir Next';
-  src: url('/assets/common/fonts/AvenirNextLTPro-Demi.otf') format('opentype');
+  src: url('./core/assets/fonts/AvenirNextLTPro-Demi.woff2') format('woff2');
   font-weight: 600;
   font-display: swap;
 }
 @font-face {
   font-family: 'Avenir Next';
-  src: url('/assets/common/fonts/AvenirNextLTPro-Bold.otf') format('opentype');
+  src: url('./core/assets/fonts/AvenirNextLTPro-Bold.woff2') format('woff2');
   font-weight: 800;
   font-display: swap;
 }
@@ -79,12 +82,6 @@
   --shadow-glow-primary: 0 0 16px rgba(0, 233, 163, 0.45);
   --ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
   --ease-pop: cubic-bezier(0.2, 1.5, 0.4, 1);
-  /* legacy names used by the spike page */
-  --bg: var(--surface-app);
-  --panel: var(--surface-card);
-  --text: var(--text-primary);
-  --accent: var(--action-primary);
-  --fail: var(--status-loss);
 }
 
 * {
@@ -109,15 +106,6 @@ button:disabled {
 }
 
 /* ---------- shared PBF components ---------- */
-.pbf-screen {
-  max-width: 440px;
-  margin: 0 auto;
-  padding: 8px 12px 24px;
-  display: grid;
-  /* one column that never grows past the frame, whatever a child's min-content is */
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
-}
 .pbf-header {
   display: flex;
   align-items: center;
@@ -149,7 +137,9 @@ button:disabled {
   background: var(--pbf-secondary-600);
   font: 900 18px/1.1 var(--font-display);
 }
+/* the label is translated text; capitals are applied here, not in the dictionary */
 .pbf-balance small {
+  text-transform: uppercase;
   font: 700 9px/1 var(--font-body);
   letter-spacing: 0.08em;
   opacity: 0.8;
@@ -242,49 +232,6 @@ button:disabled {
   opacity: 0.45;
 }
 
-/* spike page (dev) */
-.page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 16px;
-}
-.stages {
-  display: flex;
-  gap: 8px;
-}
-.stage {
-  flex: 1;
-  height: 320px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--panel);
-}
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 12px 0;
-}
-.controls button {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--accent);
-  background: transparent;
-}
-.results,
-.log {
-  padding-left: 18px;
-  font:
-    12px/1.5 ui-monospace,
-    monospace;
-}
-.pass {
-  color: var(--accent);
-}
-.fail {
-  color: var(--fail);
-}
-
 /* ---------- app frame (PBF AppShell rules) ---------- */
 html,
 body {
@@ -295,20 +242,30 @@ body {
 body {
   background: #000;
 }
+/* Standalone pages fill the screen. An operator embedding the game in a sized element (not an iframe) sets
+   --pbf-host-height: 100% on :root (or the element) so the game sizes to that element instead. */
 .app-shell {
   position: relative;
-  height: 100dvh;
-  background: #000 url('/assets/common/images/desktop/desktopBg.png') center / cover no-repeat;
+  height: var(--pbf-host-height, 100dvh);
+  background: #000;
+}
+/* the background is only visible around the centred desktop column (frame is full width at 768px and below),
+   so phones never download it; desktops fetch it once the game is playable (GameBoot sets .pbf-decorated),
+   so it never competes with files the first screen needs */
+@media (min-width: 769px) {
+  .pbf-decorated .app-shell {
+    background: #000 url('./core/assets/desktopBg.png') center / cover no-repeat;
+  }
 }
 .app-frame {
   position: relative;
-  container-type: inline-size; /* lets a game switch layout on the frame width, not the window width */
+  /* size container: games lay out on the frame's width AND height (GameLayout), never the window's */
+  container: pbf-frame / size;
   width: 45vh;
   max-width: 480px;
-  height: 100dvh;
+  height: var(--pbf-host-height, 100dvh);
   margin: 0 auto;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden; /* the game layout scrolls its own info section */
   overscroll-behavior: contain;
   scrollbar-width: none;
   background:
@@ -328,26 +285,147 @@ body {
     width: 100%;
   }
 }
-.app-frame .pbf-screen {
-  max-width: none;
-}
-.app-rotate {
-  display: none;
-}
-/* phones turned to landscape (same thresholds as PBF: 500-940px wide) */
-@media (max-width: 940px) and (min-width: 500px) and (orientation: landscape) {
-  .app-rotate {
-    position: absolute;
-    inset: 0;
-    z-index: 100;
-    display: grid;
-    place-items: center;
-    background: #000;
-    font: 800 15px/1.4 var(--font-body);
+/* short, wide screens (phones in landscape): use the full width; GameLayout switches to side by side */
+@media (orientation: landscape) and (max-height: 540px) {
+  .app-frame {
+    width: 100%;
+    max-width: none;
   }
 }
 
-/* ---------- PBF motion (keyframes copied from the prototypes) ---------- */
+/* ---------- game layout (core/ui/GameLayout) ----------
+   Playable unit = header + stage + controls, sized from the frame (container) height:
+     min(100% of the frame, max(--pbf-play-min, --pbf-play-share % of the frame)).
+   Info fills what is left and scrolls on its own; if the frame is too short for both, the whole layout scrolls
+   so info sits below a full-height playable unit. Games tune --pbf-play-min / --pbf-play-share. */
+.pbf-layout {
+  --pbf-play-min: 360px;
+  --pbf-play-share: 50;
+  --pbf-info-min: 96px; /* below this the info section is reached by scrolling the page past the game */
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.pbf-layout::-webkit-scrollbar {
+  display: none;
+}
+.pbf-play {
+  flex: none;
+  height: min(100cqh, max(var(--pbf-play-min), calc(var(--pbf-play-share) * 1cqh)));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 6px;
+  padding: 6px 12px 8px;
+}
+.pbf-play-head {
+  grid-row: 1;
+  min-width: 0;
+}
+.pbf-play-stage {
+  grid-row: 2;
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  /* a DOM stage longer than its slot (a list of picks) scrolls inside the game area; controls never move */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.pbf-play-controls {
+  grid-row: 3;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.pbf-info {
+  flex: 1 1 0;
+  min-height: var(--pbf-info-min);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 10px;
+  padding: 10px 12px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+}
+/* stake chips inside controls: always one row, shrinking with the width */
+.pbf-play-controls .stake-chips {
+  grid-template-columns: none;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+}
+.pbf-play-controls .stake-chips button {
+  min-height: 32px;
+  padding: 6px 2px;
+  font-size: 12px;
+}
+/* compact header inside the playable unit */
+.pbf-play-head .pbf-header {
+  gap: 6px;
+}
+.pbf-play-head .pbf-eyebrow {
+  font-size: 9px;
+}
+.pbf-play-head .pbf-title {
+  font-size: 20px;
+}
+.pbf-play-head .pbf-balance {
+  padding: 3px 10px;
+  font-size: 15px;
+}
+@container pbf-frame (max-height: 640px) {
+  .pbf-play-head .pbf-eyebrow {
+    display: none;
+  }
+}
+/* landscape: stage left at full height, header + controls + scrolling info right */
+@container pbf-frame (orientation: landscape) and (max-height: 540px) {
+  .pbf-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'stage head'
+      'stage controls'
+      'stage info';
+    column-gap: 10px;
+    row-gap: 6px;
+    overflow: hidden;
+  }
+  .pbf-play {
+    display: contents;
+  }
+  .pbf-play-head {
+    grid-area: head;
+    padding: 6px 12px 0 0;
+  }
+  .pbf-play-stage {
+    grid-area: stage;
+    padding: 8px 0 8px 12px;
+  }
+  .pbf-play-controls {
+    grid-area: controls;
+    padding: 0 12px 0 0;
+  }
+  .pbf-info {
+    grid-area: info;
+    min-height: 0;
+    padding: 8px 12px 12px 0;
+    border-top: 0;
+    background: none;
+  }
+}
+
+/* ---------- shared motion: the live pill, rise-in and count pop (game-specific keyframes live in each game's CSS) ---------- */
 @keyframes pbfLive {
   0%,
   100% {
@@ -359,29 +437,6 @@ body {
     box-shadow: 0 0 0 4px rgba(255, 32, 114, 0);
   }
 }
-@keyframes pbfCrash {
-  0% {
-    opacity: 0.85;
-  }
-  10% {
-    opacity: 0.1;
-  }
-  20% {
-    opacity: 0.7;
-  }
-  30% {
-    opacity: 0.1;
-  }
-  40% {
-    opacity: 0.55;
-  }
-  55% {
-    opacity: 0.15;
-  }
-  100% {
-    opacity: 0.18;
-  }
-}
 @keyframes pbfRise {
   0% {
     opacity: 0;
@@ -390,36 +445,6 @@ body {
   100% {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-@keyframes pbfFanL {
-  0% {
-    opacity: 0;
-    transform: translate(60px, 40px) rotate(0deg) scale(0.6);
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes pbfFanC {
-  0% {
-    opacity: 0;
-    transform: translateY(60px) scale(0.6);
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes pbfFanR {
-  0% {
-    opacity: 0;
-    transform: translate(-60px, 40px) rotate(0deg) scale(0.6);
-  }
-  100% {
-    opacity: 1;
-    transform: none;
   }
 }
 @keyframes pbfCount {
@@ -433,117 +458,6 @@ body {
   }
   100% {
     transform: scale(1);
-  }
-}
-@keyframes pbfStrobe {
-  0% {
-    opacity: 0.9;
-  }
-  12% {
-    opacity: 0;
-  }
-  24% {
-    opacity: 0.75;
-  }
-  36% {
-    opacity: 0;
-  }
-  48% {
-    opacity: 0.5;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes pbfPop {
-  0% {
-    transform: scale(0.2) rotate(-8deg);
-    opacity: 0;
-  }
-  35% {
-    transform: scale(1.18) rotate(2deg);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(0.96) rotate(-1deg);
-  }
-  62% {
-    transform: scale(1.04);
-  }
-  72%,
-  88% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0;
-  }
-}
-@keyframes pbfBoost {
-  0%,
-  20% {
-    transform: scale(0.4);
-    opacity: 0;
-  }
-  45% {
-    transform: scale(1.35);
-    opacity: 1;
-  }
-  60% {
-    transform: scale(1);
-  }
-  70% {
-    transform: scale(1.12);
-  }
-  80%,
-  88% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes pbfRays {
-  0% {
-    transform: scale(0.3);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-}
-@keyframes pbfLegHit {
-  0% {
-    transform: scale(1);
-  }
-  25% {
-    transform: scale(1.14);
-  }
-  45% {
-    transform: scale(0.97);
-  }
-  65% {
-    transform: scale(1.06);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-@keyframes pbfStamp {
-  0% {
-    transform: scale(2.2) rotate(-12deg);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(0.92) rotate(-12deg);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) rotate(-12deg);
-    opacity: 1;
   }
 }
 .pbf-pill.live {
@@ -590,6 +504,17 @@ body {
   background: var(--action-primary);
   transform-origin: left;
   transition: transform 0.3s var(--ease-standard);
+}
+/* the loader takes over from the inline HTML loader (index.html): no entrance animation, so it does not fade in */
+.boot[aria-busy='true'] {
+  animation: none;
+}
+/* while the screen mounts and draws its first frame underneath */
+.boot-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: var(--surface-app);
 }
 .boot .pbf-btn {
   min-width: 180px;

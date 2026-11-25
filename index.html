@@ -3,10 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PBF Game Framework</title>
+    <title>%GAME_TITLE%</title>
+    <link rel="icon" href="data:," /><!-- no favicon request (it 404s on most game hosts) -->
+    <!-- Inline loader: painted with the HTML, before any script or stylesheet arrives. React replaces it with
+         the real loader (core/boot/GameBoot), which uses the same frame, so there is no flash. Colours mirror
+         styles.css (.app-frame, .boot-bar). The bar is indeterminate on purpose: nothing is measured yet. -->
+    <style>
+      html,body{margin:0;height:100%;background:#000}
+      #boot-inline{box-sizing:border-box;width:45vh;max-width:480px;height:100dvh;margin:0 auto;display:grid;place-content:center;justify-items:center;gap:14px;
+        background:linear-gradient(180deg,#24123d 0%,#1d1030 55%,#120a1f 100%);color:#fff;font:900 26px/1 system-ui,sans-serif;text-transform:uppercase}
+      @media (max-height:779px){#boot-inline{width:55vh}}
+      @media (max-width:768px){#boot-inline{width:100%}}
+      #boot-inline i{display:block;width:220px;height:6px;border-radius:999px;background:#4a4059;overflow:hidden;position:relative}
+      #boot-inline i::after{content:'';position:absolute;inset:0;width:30%;border-radius:inherit;background:#00e9a3;animation:pbfInline 1.1s ease-in-out infinite}
+      @keyframes pbfInline{from{transform:translateX(-100%)}to{transform:translateX(340%)}}
+      @media (prefers-reduced-motion:reduce){#boot-inline i::after{animation:none;width:100%;opacity:.4}}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div id="boot-inline" aria-busy="true"><span>%GAME_TITLE%</span><i></i></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

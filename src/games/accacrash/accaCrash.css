@@ -1,3 +1,19 @@
+=/* Compact layout (core GameLayout): header + crash history, curve + scorer cards as the stage, the two bet
+   panels side by side as controls; ticker, tiers and other players' bets in the scrolling info. */
+.acca {
+  --pbf-play-min: 440px;
+}
+.acca .pbf-play-head {
+  display: grid;
+  gap: 4px;
+}
+.acca-stagewrap {
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
 .acca .pbf-title .pbf-pill {
   vertical-align: middle;
   font-size: 10px;
@@ -20,7 +36,8 @@
 }
 
 .acca-stage {
-  /* height comes from the view config: scenes/crashCurve.config.ts (canvas) */
+  /* fills the stage slot; the curve scene redraws to whatever size it gets */
+  container: acca-stage / size;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 2px solid var(--surface-card-hi);
@@ -70,14 +87,19 @@
 }
 .acca-card {
   display: grid;
-  gap: 2px;
+  gap: 1px;
   justify-items: center;
-  padding: 10px 6px 8px;
+  padding: 5px 4px 4px;
   border: 2px solid transparent;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 .acca-card b {
-  font: 900 14px/1.1 var(--font-display);
+  /* keeps the centred name clear of the flag in the top-left corner */
+  max-width: calc(100% - 40px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: 900 13px/1.1 var(--font-display);
   text-transform: uppercase;
   text-align: center;
 }
@@ -86,7 +108,7 @@
   opacity: 0.75;
 }
 .acca-card span {
-  margin-top: 4px;
+  margin-top: 2px;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--surface-app);
@@ -119,16 +141,18 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-/* the frame can be narrower than the window (browser zoom, short windows): switch on the frame width */
-@container (max-width: 400px) {
-  .acca-panels {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* both panels always side by side; each panel drops its quick-stake chips when it gets narrow
+   (the stepper still reaches every stake) */
 .acca-panel {
+  container-type: inline-size;
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
+}
+@container (max-width: 200px) {
+  .acca-panel .stake-chips {
+    display: none;
+  }
 }
 .acca-auto {
   display: flex;
@@ -198,10 +222,14 @@
   text-align: center;
 }
 .acca-stepper b {
-  font: 900 18px/1 var(--font-display);
+  font: 900 16px/1 var(--font-display);
+}
+.acca-panel .pbf-btn {
+  min-height: 44px;
+  padding: 10px 6px;
 }
 .acca-stepper button {
-  height: 28px;
+  height: 26px;
   border: 0;
   border-radius: 50%;
   background: var(--surface-card-hi);
@@ -212,7 +240,10 @@
 }
 .acca-result {
   margin: 0;
-  padding: 10px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 6px;
   border-radius: var(--radius-sm);
   text-align: center;
   font: 800 13px/1.2 var(--font-body);
@@ -228,6 +259,7 @@
 }
 .acca-message {
   margin: 0;
+  font-size: 13px;
   text-align: center;
   color: var(--status-loss);
   font-weight: 800;
@@ -253,7 +285,7 @@
   pointer-events: none;
 }
 .acca-countdown span {
-  font: 900 88px/1 var(--font-display);
+  font: 900 min(88px, 45cqh) / 1 var(--font-display);
   color: var(--action-primary);
   text-shadow: var(--shadow-glow-primary);
 }
@@ -418,8 +450,7 @@
   padding: 24px 16px 16px;
   text-align: center;
   overflow-y: auto;
-  background:
-    linear-gradient(180deg, rgba(29, 16, 48, 0.55) 0%, rgba(29, 16, 48, 0.92) 45%, var(--surface-app) 70%);
+  background: linear-gradient(180deg, rgba(29, 16, 48, 0.55) 0%, rgba(29, 16, 48, 0.92) 45%, var(--surface-app) 70%);
   animation: pbfCount 700ms var(--ease-pop) both;
 }
 .acca-splash-title {
@@ -498,4 +529,156 @@
 .acca-splash .pbf-btn {
   width: 100%;
   margin-top: auto;
+}
+
+/* ---------- keyframes (copied from the prototype; used only by this game) ---------- */
+@keyframes pbfCrash {
+  0% {
+    opacity: 0.85;
+  }
+  10% {
+    opacity: 0.1;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  30% {
+    opacity: 0.1;
+  }
+  40% {
+    opacity: 0.55;
+  }
+  55% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0.18;
+  }
+}
+@keyframes pbfFanL {
+  0% {
+    opacity: 0;
+    transform: translate(60px, 40px) rotate(0deg) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pbfFanC {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pbfFanR {
+  0% {
+    opacity: 0;
+    transform: translate(-60px, 40px) rotate(0deg) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pbfStrobe {
+  0% {
+    opacity: 0.9;
+  }
+  12% {
+    opacity: 0;
+  }
+  24% {
+    opacity: 0.75;
+  }
+  36% {
+    opacity: 0;
+  }
+  48% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes pbfPop {
+  0% {
+    transform: scale(0.2) rotate(-8deg);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.18) rotate(2deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.96) rotate(-1deg);
+  }
+  62% {
+    transform: scale(1.04);
+  }
+  72%,
+  88% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes pbfBoost {
+  0%,
+  20% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1);
+  }
+  70% {
+    transform: scale(1.12);
+  }
+  80%,
+  88% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes pbfRays {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes pbfLegHit {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.14);
+  }
+  45% {
+    transform: scale(0.97);
+  }
+  65% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
 }

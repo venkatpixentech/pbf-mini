@@ -7,5 +7,5 @@ export class ApiError<C extends string = string> extends Error {
   }
 }
 
-/** Codes every game backend can return during session start (PBF: init errors and maintenance, doc 07). */
+/** Codes every game backend can return during session start (PBF: init errors and maintenance, docs/09-BACKEND-INTEGRATION.md). */
 export type SessionErrorCode = 'SESSION_INVALID' | 'SESSION_EXPIRED' | 'MAINTENANCE';

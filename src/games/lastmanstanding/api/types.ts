@@ -1,5 +1,5 @@
 // Last Man Standing backend contract. The mock server implements it today; the real backend must implement
-// the same shapes (doc 07 section 6). The server owns fixtures, match results, prizes and balance; the client
+// the same shapes (docs/09-BACKEND-INTEGRATION.md). The server owns fixtures, match results, prizes and balance; the client
 // only renders them. Fixture win/draw/loss odds are sent as display data (strength bars, planner colours).
 import type { SessionErrorCode } from '../../../core/services/apiError.ts';
 

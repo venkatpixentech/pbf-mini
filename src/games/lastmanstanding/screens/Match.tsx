@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatMoney } from 'core/services/money';
+import { GameLayout } from 'core/ui/GameLayout';
 
 import type { CashOutResponse, PickResponse, Team } from '../api/types';
 import { ballPath, prizeFor } from '../lib';
-import { Badge, HdaBar } from '../ui';
+import { Badge, HdaBar, type LayoutFrame } from '../ui';
 
 const ROUNDS = 20;
 const DURATION_MS = 9000;
@@ -16,10 +17,11 @@ type Props = {
   onNext: () => void;
   onCashOut: () => void;
   onNew: () => void;
+  frame: LayoutFrame;
 };
 
 /** Plays back the server's result for the picked match: score, events and a cosmetic ball path. */
-export function Match({ res, currency, busy, onNext, onCashOut, onNew }: Props) {
+export function Match({ res, currency, busy, onNext, onCashOut, onNew, frame }: Props) {
   const { game, mine } = res;
   const teams = useMemo(() => new Map(game.teams.map((t) => [t.code, t])), [game.teams]);
   const m = res.results.find((r) => r.home === mine || r.away === mine)!;
@@ -75,80 +77,97 @@ export function Match({ res, currency, busy, onNext, onCashOut, onNew }: Props) 
   const goalMarks = m.goals;
 
   return (
-    <section className="lms-match pbf-card">
-      <p className="gw">
-        Game week {gw}: you backed {teams.get(mine)!.name}
-      </p>
-      <div className="board">
-        <Side team={home} mine={mine === home.code} />
-        <div className="score" aria-live="polite">
-          {done ? m.homeGoals : hs}-{done ? m.awayGoals : as}
-        </div>
-        <Side team={away} mine={mine === away.code} />
-      </div>
-      <HdaBar fixture={fixture} teams={teams} />
-
-      {!done && (
-        <div className="sim">
-          <div className="pv">
-            <svg className="mk" viewBox="0 0 105 68" preserveAspectRatio="none" aria-hidden="true" fill="none">
-              <rect x="1" y="1" width="103" height="66" />
-              <line x1="52.5" y1="1" x2="52.5" y2="67" />
-              <circle cx="52.5" cy="34" r="9.15" />
-              <rect x="1" y="13.85" width="16.5" height="40.3" />
-              <rect x="87.5" y="13.85" width="16.5" height="40.3" />
-              <rect x="1" y="24.85" width="5.5" height="18.3" />
-              <rect x="98.5" y="24.85" width="5.5" height="18.3" />
-            </svg>
-            <span className="end l">{home.name} &rarr;</span>
-            <span className="end r">&larr; {away.name}</span>
-            <div className={`pl${bx < 35 ? ' aw' : ''}`} style={{ left: `${bx}%` }} />
-            <div className="ball" style={{ left: `${bx}%`, top: `${by}%` }} />
-            <div className={`flash${flash ? ' on' : ''}`}>
-              GOAL
-              {flash && <small>{nameOf(flash.s === 'h' ? m.home : m.away, flash.who)}</small>}
+    <GameLayout
+      className="lastmanstanding lms-matchview"
+      header={frame.header}
+      stage={
+        <section className="lms-match pbf-card">
+          <p className="gw">
+            Game week {gw}: you backed {teams.get(mine)!.name}
+          </p>
+          <div className="board">
+            <Side team={home} mine={mine === home.code} />
+            <div className="score" aria-live="polite">
+              {done ? m.homeGoals : hs}-{done ? m.awayGoals : as}
             </div>
+            <Side team={away} mine={mine === away.code} />
           </div>
-          <div className="tl">
-            <i style={{ width: `${(minute / 90) * 100}%` }} />
-            {goalMarks
-              .filter((g) => g.m <= min)
-              .map((g) => (
-                <b key={g.m} className={g.s} style={{ left: `${(g.m / 90) * 100}%` }} />
-              ))}
-          </div>
-          <div className="simbar">
-            <span className="clock">{clock}</span>
-            <button className="skip" onClick={() => (skip.current = true)}>
-              Skip to result
-            </button>
-          </div>
-        </div>
-      )}
-      {done && <p className="clock">Full time</p>}
+          <HdaBar fixture={fixture} teams={teams} />
 
-      <ul className="events">
-        {shown.map((i) => (
-          <li key={`${i.m}${i.goal}`} className={`${i.s}${i.goal ? '' : ' ch'}`}>
-            {i.m}&apos; {i.goal ? 'Goal: ' : ''}
-            {nameOf(i.s === 'h' ? m.home : m.away, i.who)}
-            {i.goal ? '' : `: ${i.how}`}
-          </li>
-        ))}
-      </ul>
-
-      {done && (
-        <Verdict
-          res={res}
-          currency={currency}
-          busy={busy}
-          onNext={onNext}
-          onCashOut={onCashOut}
-          onNew={onNew}
-          teams={teams}
-        />
-      )}
-    </section>
+          {!done && (
+            <div className="sim">
+              <div className="pv">
+                <svg className="mk" viewBox="0 0 105 68" preserveAspectRatio="none" aria-hidden="true" fill="none">
+                  <rect x="1" y="1" width="103" height="66" />
+                  <line x1="52.5" y1="1" x2="52.5" y2="67" />
+                  <circle cx="52.5" cy="34" r="9.15" />
+                  <rect x="1" y="13.85" width="16.5" height="40.3" />
+                  <rect x="87.5" y="13.85" width="16.5" height="40.3" />
+                  <rect x="1" y="24.85" width="5.5" height="18.3" />
+                  <rect x="98.5" y="24.85" width="5.5" height="18.3" />
+                </svg>
+                <span className="end l">{home.name} &rarr;</span>
+                <span className="end r">&larr; {away.name}</span>
+                <div className={`pl${bx < 35 ? ' aw' : ''}`} style={{ left: `${bx}%` }} />
+                <div className="ball" style={{ left: `${bx}%`, top: `${by}%` }} />
+                <div className={`flash${flash ? ' on' : ''}`}>
+                  GOAL
+                  {flash && <small>{nameOf(flash.s === 'h' ? m.home : m.away, flash.who)}</small>}
+                </div>
+              </div>
+              <div className="tl">
+                <i style={{ width: `${(minute / 90) * 100}%` }} />
+                {goalMarks
+                  .filter((g) => g.m <= min)
+                  .map((g) => (
+                    <b key={g.m} className={g.s} style={{ left: `${(g.m / 90) * 100}%` }} />
+                  ))}
+              </div>
+              <div className="simbar">
+                <span className="clock">{clock}</span>
+                <button className="skip" onClick={() => (skip.current = true)}>
+                  Skip to result
+                </button>
+              </div>
+            </div>
+          )}
+          {done && <p className="clock">Full time</p>}
+        </section>
+      }
+      controls={
+        <>
+          {done && (
+            <Verdict
+              res={res}
+              currency={currency}
+              busy={busy}
+              onNext={onNext}
+              onCashOut={onCashOut}
+              onNew={onNew}
+              teams={teams}
+            />
+          )}
+          {!done && <p className="lms-wait">Match in play...</p>}
+          {frame.notice}
+        </>
+      }
+      infoLabel="Match events and other results"
+      info={
+        <>
+          <ul className="events">
+            {shown.map((i) => (
+              <li key={`${i.m}${i.goal}`} className={`${i.s}${i.goal ? '' : ' ch'}`}>
+                {i.m}&apos; {i.goal ? 'Goal: ' : ''}
+                {nameOf(i.s === 'h' ? m.home : m.away, i.who)}
+                {i.goal ? '' : `: ${i.how}`}
+              </li>
+            ))}
+          </ul>
+          {done && <Others res={res} teams={teams} />}
+          {frame.footer}
+        </>
+      }
+    />
   );
 }
 
@@ -161,7 +180,15 @@ function Side({ team, mine }: { team: Team; mine: boolean }) {
   );
 }
 
-function Verdict({ res, currency, busy, teams, onNext, onCashOut, onNew }: Props & { teams: Map<string, Team> }) {
+function Verdict({
+  res,
+  currency,
+  busy,
+  teams,
+  onNext,
+  onCashOut,
+  onNew,
+}: Omit<Props, 'frame'> & { teams: Map<string, Team> }) {
   const { game, won } = res;
   const m = res.results.find((r) => r.home === res.mine || r.away === res.mine)!;
   const bank = prizeFor(game, game.wins);
@@ -203,7 +230,6 @@ function Verdict({ res, currency, busy, teams, onNext, onCashOut, onNew }: Props
       </button>
     );
   }
-  const others = res.results.filter((r) => r !== m);
   return (
     <div className="result">
       <div className={`verdict ${won ? 'win' : 'lose'}`}>
@@ -211,18 +237,25 @@ function Verdict({ res, currency, busy, teams, onNext, onCashOut, onNew }: Props
         <p>{text}</p>
       </div>
       <div className={`actions${won && !game.over ? '' : ' one'}`}>{actions}</div>
-      <div className="others">
-        <div className="hd">Other results this game week</div>
-        {others.map((r) => (
-          <span key={r.home} style={{ display: 'contents' }}>
-            <span className="h">{teams.get(r.home)!.name}</span>
-            <span className="s">
-              {r.homeGoals}-{r.awayGoals}
-            </span>
-            <span>{teams.get(r.away)!.name}</span>
+    </div>
+  );
+}
+
+/** The rest of this game week's results (info section). */
+function Others({ res, teams }: { res: PickResponse; teams: Map<string, Team> }) {
+  const others = res.results.filter((r) => r.home !== res.mine && r.away !== res.mine);
+  return (
+    <div className="others pbf-card">
+      <div className="hd">Other results this game week</div>
+      {others.map((r) => (
+        <span key={r.home} style={{ display: 'contents' }}>
+          <span className="h">{teams.get(r.home)!.name}</span>
+          <span className="s">
+            {r.homeGoals}-{r.awayGoals}
           </span>
-        ))}
-      </div>
+          <span>{teams.get(r.away)!.name}</span>
+        </span>
+      ))}
     </div>
   );
 }
@@ -233,27 +266,36 @@ export function Banked({
   currency,
   stake,
   onNew,
+  frame,
 }: {
   res: CashOutResponse;
   currency: string;
   stake: number;
   onNew: () => void;
+  frame: LayoutFrame;
 }) {
   return (
-    <section className="lms-match pbf-card">
-      <p className="gw">Cashed out after round {res.game.wins}</p>
-      <div className="score big">{formatMoney(res.amount, currency)}</div>
-      <div className="verdict win">
-        <h3>Banked</h3>
-        <p>
-          {formatMoney(res.amount, currency)} added to your balance from a {formatMoney(stake, currency)} stake.
-        </p>
-      </div>
-      <div className="actions one">
+    <GameLayout
+      className="lastmanstanding lms-matchview"
+      header={frame.header}
+      stage={
+        <section className="lms-match pbf-card">
+          <p className="gw">Cashed out after round {res.game.wins}</p>
+          <div className="score big">{formatMoney(res.amount, currency)}</div>
+          <div className="verdict win">
+            <h3>Banked</h3>
+            <p>
+              {formatMoney(res.amount, currency)} added to your balance from a {formatMoney(stake, currency)} stake.
+            </p>
+          </div>
+        </section>
+      }
+      controls={
         <button className="pbf-btn" onClick={onNew}>
           New game
         </button>
-      </div>
-    </section>
+      }
+      info={frame.footer}
+    />
   );
 }

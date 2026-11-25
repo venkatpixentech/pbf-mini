@@ -1,6 +1,11 @@
 // Small presentational pieces shared by the Last Man Standing screens.
+import type { ReactNode } from 'react';
+
 import type { Fixture, Team } from './api/types';
 import { favouriteLabel, tier } from './lib';
+
+/** Pieces every screen puts into its GameLayout: the header, the error notice (controls) and the footer (info). */
+export type LayoutFrame = { header: ReactNode; notice: ReactNode; footer: ReactNode };
 
 /** Card-tier style OVR badge. */
 export function Badge({ team, small }: { team: Team; small?: boolean }) {

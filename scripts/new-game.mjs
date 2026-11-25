@@ -1,14 +1,16 @@
 // npm run new-game <id> "<Game Title>"   (id: lowercase letters and digits only)
 // Creates src/games/<id> with a working placeholder game (mock backend, self-check, screen),
 // registers its self-check in package.json, and formats it. Replace the placeholder play() rules
-// with the real game (docs/16-creating-a-new-game.md).
+// with the real game (docs/03-GAME-DEVELOPMENT-GUIDE.md).
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const [id, ...titleParts] = process.argv.slice(2);
 const title = titleParts.join(' ') || id;
 if (!id || !/^[a-z][a-z0-9]*$/.test(id)) {
-  console.error('Usage: npm run new-game <id> "<Game Title>"   (id: lowercase letters and digits only, e.g. new-game penaltyshootout "Penalty Shootout")');
+  console.error(
+    'Usage: npm run new-game <id> "<Game Title>"   (id: lowercase letters and digits only, e.g. new-game penaltyshootout "Penalty Shootout")',
+  );
   process.exit(1);
 }
 if (/['"`\$]/.test(title)) {
@@ -32,26 +34,31 @@ const fill = (text) => text.replaceAll('__ID__', id).replaceAll('__TITLE__', tit
 
 const files = {
   'index.ts': `// Game entry: the only file the core reads. Everything else in this folder belongs to the game.
+// Keep imports here light: this file is in the boot bundle. The screen loads through loadScreen.
 import { defineGame } from 'core/game/defineGame';
 import { mockInitError } from 'core/services/mockTransport';
 
 import { createMockServer } from './api/mockServer';
-import { __PASCAL__Screen } from './__PASCAL__Screen';
 
 export default defineGame({
   id: '__ID__',
   title: '__TITLE__',
+  // 'pixi' when the first screen has a <PixiStage critical>; 'dom' keeps Pixi out of the boot entirely
+  renderer: 'dom',
   preload: [], // Pixi assets needed by the first screen
-  // MOCK: replace with the real backend client once the contract exists (doc 10 Q1).
+  // MOCK: replace with the real backend client once the contract exists (docs/09-BACKEND-INTEGRATION.md, Q1).
   createApi: (launch) => createMockServer({ currency: launch.currency ?? 'GBP', initError: mockInitError() }),
-  Screen: __PASCAL__Screen,
+  loadScreen: () => import('./__PASCAL__Screen').then((m) => m.__PASCAL__Screen),
 });
 `,
-  '__ID__.css': `.__ID__ {
+  '__ID__.css': `/* GameLayout root: the smallest height the game can be played in (see docs/06-RESPONSIVE-GAME-LAYOUT.md) */
+.__ID__ {
+  --pbf-play-min: 320px;
+}
+.__ID__-stage {
+  height: 100%;
   display: grid;
-  gap: 12px;
-  align-content: start;
-  padding: 0 12px 12px;
+  place-items: center;
 }
 .__ID__-result {
   padding: 16px;
@@ -74,6 +81,7 @@ import type { GameScreenProps } from 'core/game/defineGame';
 import { useApiMessage } from 'core/hooks/useApiMessage';
 import { formatMoney } from 'core/services/money';
 import { GameHeader } from 'core/ui/GameHeader';
+import { GameLayout } from 'core/ui/GameLayout';
 import { StakeChips } from 'core/ui/StakeChips';
 
 import type { InitResponse, PlayResponse, __PASCAL__Api } from './api/types';
@@ -106,21 +114,32 @@ export function __PASCAL__Screen({ api, init }: GameScreenProps<__PASCAL__Api, I
     }
   };
 
+  // Compact layout (docs/06-RESPONSIVE-GAME-LAYOUT.md): header + stage + controls fit in about half the
+  // screen and never scroll; rules, history and feeds go in info.
   return (
-    <main className="__ID__ pbf-screen">
-      <GameHeader title="__TITLE__" balance={balance} currency={currency} />
-      {last && (
-        <p className={\`__ID__-result \${last.won ? 'won' : 'lost'}\`} role="status">
-          {last.won ? \`You won \${formatMoney(last.payout, currency)}\` : 'No win this time'}
-        </p>
-      )}
-      <StakeChips stakes={stakes} value={stake} onChange={setStake} currency={currency} disabled={busy} />
-      <button className="pbf-btn" disabled={busy} onClick={play}>
-        {busy ? 'Playing...' : 'Play'}
-      </button>
-      {message && <p className="pbf-footer-note">{message}</p>}
-      <p className="pbf-footer-note">Mock backend: outcomes and balance are simulated. 18+</p>
-    </main>
+    <GameLayout
+      className="__ID__"
+      header={<GameHeader title="__TITLE__" balance={balance} currency={currency} />}
+      stage={
+        <div className="__ID__-stage">
+          {last && (
+            <p className={\`__ID__-result \${last.won ? 'won' : 'lost'}\`} role="status">
+              {last.won ? \`You won \${formatMoney(last.payout, currency)}\` : 'No win this time'}
+            </p>
+          )}
+        </div>
+      }
+      controls={
+        <>
+          <StakeChips stakes={stakes} value={stake} onChange={setStake} currency={currency} disabled={busy} />
+          <button className="pbf-btn" disabled={busy} onClick={play}>
+            {busy ? 'Playing...' : 'Play'}
+          </button>
+          {message && <p className="pbf-footer-note">{message}</p>}
+        </>
+      }
+      info={<p className="pbf-footer-note">Mock backend: outcomes and balance are simulated. 18+</p>}
+    />
   );
 }
 `,
@@ -139,7 +158,7 @@ export interface __PASCAL__Api {
   play(stake: number): Promise<PlayResponse>;
 }
 `,
-  'api/mockServer.ts': `// MOCK BACKEND for __TITLE__. Stands in for the real server until its contract exists (doc 10 Q1).
+  'api/mockServer.ts': `// MOCK BACKEND for __TITLE__. Stands in for the real server until its contract exists (docs/09-BACKEND-INTEGRATION.md, Q1).
 // It owns the wallet and every outcome, exactly as the real server must; the UI only renders responses.
 import type { SessionErrorCode } from '../../../core/services/apiError.ts';
 import { mockTransport } from '../../../core/services/mockTransport.ts';
@@ -240,4 +259,4 @@ console.log(`
 Created ${dir}. Next:
   npm run dev -- ${id}      open the placeholder game
   npm run check             structure rules + this game's mock backend self-check
-Then replace the placeholder play() rules and screen (docs/16-creating-a-new-game.md).`);
+Then replace the placeholder play() rules and screen (docs/03-GAME-DEVELOPMENT-GUIDE.md).`);

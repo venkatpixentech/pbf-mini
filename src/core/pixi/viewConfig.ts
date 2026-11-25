@@ -36,11 +36,16 @@ type Base = {
   alpha?: number;
 };
 
-/** `text` is shown as is; `bind` takes the value from the data given to buildElements. */
+/**
+ * `text` is shown as is; `bind` takes the value from the data given to buildElements; `textKey` is a translation
+ * key (it may contain `{token}` filled from the data, e.g. `tier.{tier}`, and the data is also passed to the
+ * translation as its values). A `textKey` text follows language switches (relabelTexts).
+ */
 export type TextElement = Base & {
   type: 'text';
   text?: string;
   bind?: string;
+  textKey?: string;
   upper?: boolean;
   /** Anchor 0..1, default 0.5 0.5. */
   anchor?: { x: number; y: number };
@@ -117,7 +122,7 @@ export function validateElements(elements: ElementConfig[], where = 'elements'):
     seen.add(e.id);
     if (!Number.isFinite(e.x) || !Number.isFinite(e.y)) bad('x and y must be finite numbers');
     if (e.type === 'text') {
-      if (e.text === undefined && !e.bind) bad('text needs `text` or `bind`');
+      if (e.text === undefined && !e.bind && !e.textKey) bad('text needs `text`, `bind` or `textKey`');
       if (e.style.size <= 0) bad('style.size must be above 0');
     } else if (e.type === 'sprite') {
       if (!e.alias) bad('sprite needs an alias');

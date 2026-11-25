@@ -1,8 +1,10 @@
 import { Container, Graphics, type Text, type Ticker } from 'pixi.js';
 
+import { onLanguageChange } from 'core/i18n';
 import { buildElements, colorOf } from 'core/pixi/buildView';
 import type { PixiScene, SceneContext } from 'core/pixi/scene';
 
+import { t } from '../i18n';
 import { crashCurveConfig } from './crashCurve.config';
 
 export type CrashCurveProps = {
@@ -50,6 +52,7 @@ export class CrashCurveScene implements PixiScene<CrashCurveProps, CrashCurveEve
     };
     ctx.app.ticker.add(tick);
     ctx.track(() => ctx.app.ticker.remove(tick));
+    ctx.track(onLanguageChange(() => this.draw())); // redraw the labels in the new language
     this.update(props);
   }
 
@@ -116,13 +119,13 @@ export class CrashCurveScene implements PixiScene<CrashCurveProps, CrashCurveEve
       this.label.style.fill = color;
     }
     this.label.text = `${mult}x`;
-    this.sub.text = crashed ? texts.crashed.replace('{multiplier}', mult) : texts.live;
+    this.sub.text = crashed ? t(texts.crashed, { multiplier: mult }) : t(texts.live);
     const subFill = colorOf(crashed ? colors.subCrashed : colors.subLive);
     if (this.shownSubFill !== subFill) {
       this.shownSubFill = subFill;
       this.sub.style.fill = subFill;
     }
-    this.boostLabel.text = props.boost > 0 ? texts.boost.replace('{boost}', props.boost.toFixed(2)) : '';
+    this.boostLabel.text = props.boost > 0 ? t(texts.boost, { boost: props.boost.toFixed(2) }) : '';
     // the boost label is placed from the right edge: its configured x is an inset
     this.boostLabel.position.x = w + this.boostInset;
   }

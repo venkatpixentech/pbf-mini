@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import type { GameScreenProps } from 'core/game/defineGame';
 import { useApiMessage } from 'core/hooks/useApiMessage';
 import { GameHeader } from 'core/ui/GameHeader';
+import { resetLayoutScroll } from 'core/ui/layoutScroll';
 
 import type { CashOutResponse, Game, InitResponse, LastManStandingApi, PickResponse } from './api/types';
 import { Banked, Match } from './screens/Match';
@@ -42,10 +43,10 @@ export function LastManStandingScreen({ api, init }: GameScreenProps<LastManStan
   const [busy, setBusy] = useState(false);
   const { message, setMessage, fail } = useApiMessage(ERROR_TEXT);
 
-  // a new view starts at the top of the frame (the frame is the scroll container)
+  // a new view starts at the top of each scrolling part of the layout (page, stage, info)
   const viewKey = view.name === 'match' ? `match${view.res.game.history.length}` : `${view.name}${game?.gw ?? ''}`;
   useEffect(() => {
-    document.querySelector('.app-frame')?.scrollTo({ top: 0 });
+    resetLayoutScroll();
   }, [viewKey]);
 
   const run = async (fn: () => Promise<void>) => {
@@ -97,47 +98,49 @@ export function LastManStandingScreen({ api, init }: GameScreenProps<LastManStan
     setView({ name: 'setup' });
   };
 
+  const frame = {
+    header: <GameHeader eyebrow="Playbook" title="Last Man Standing" balance={balance} currency={currency} />,
+    notice: message && (
+      <p className="pbf-footer-note lms-notice" role="alert">
+        {message}
+      </p>
+    ),
+    footer: <p className="pbf-footer-note">Mock backend: results, prizes and balance are simulated. 18+</p>,
+  };
+
+  if (view.name === 'play' && game)
+    return (
+      <Play key={game.gw} game={game} currency={currency} busy={busy} onPlay={play} onCashOut={cashOut} frame={frame} />
+    );
+  if (view.name === 'match')
+    return (
+      <Match
+        key={view.res.game.gw + view.res.game.history.length}
+        res={view.res}
+        currency={currency}
+        busy={busy}
+        onNext={() => setView({ name: 'play' })}
+        onCashOut={cashOut}
+        onNew={newGame}
+        frame={frame}
+      />
+    );
+  if (view.name === 'banked' && game)
+    return <Banked res={view.res} currency={currency} stake={game.stake} onNew={newGame} frame={frame} />;
   return (
-    <main className="lastmanstanding pbf-screen">
-      <GameHeader title="Last Man Standing" balance={balance} currency={currency} />
-      {view.name === 'setup' && (
-        <Setup
-          init={init}
-          balance={balance}
-          stake={stake}
-          league={league}
-          mode={mode}
-          busy={busy}
-          onStake={setStake}
-          onLeague={setLeague}
-          onMode={setMode}
-          onStart={start}
-          onResetBalance={resetBalance}
-        />
-      )}
-      {view.name === 'play' && game && (
-        <Play key={game.gw} game={game} currency={currency} busy={busy} onPlay={play} onCashOut={cashOut} />
-      )}
-      {view.name === 'match' && (
-        <Match
-          key={view.res.game.gw + view.res.game.history.length}
-          res={view.res}
-          currency={currency}
-          busy={busy}
-          onNext={() => setView({ name: 'play' })}
-          onCashOut={cashOut}
-          onNew={newGame}
-        />
-      )}
-      {view.name === 'banked' && game && (
-        <Banked res={view.res} currency={currency} stake={game.stake} onNew={newGame} />
-      )}
-      {message && (
-        <p className="pbf-footer-note" role="alert">
-          {message}
-        </p>
-      )}
-      <p className="pbf-footer-note">Mock backend: results, prizes and balance are simulated. 18+</p>
-    </main>
+    <Setup
+      init={init}
+      balance={balance}
+      stake={stake}
+      league={league}
+      mode={mode}
+      busy={busy}
+      onStake={setStake}
+      onLeague={setLeague}
+      onMode={setMode}
+      onStart={start}
+      onResetBalance={resetBalance}
+      frame={frame}
+    />
   );
 }

@@ -3,6 +3,8 @@
 // and places these elements.
 import type { ElementConfig } from 'core/pixi/viewConfig';
 
+import type { AccaKey } from '../i18n';
+
 export const crashCurveConfig = {
   /** Canvas portion: a share of the screen height, kept between min and max (px). */
   canvas: { heightPct: 30, minHeight: 200, maxHeight: 280 },
@@ -28,12 +30,12 @@ export const crashCurveConfig = {
   colors: { live: 'green' as const, crashed: 'red' as const, subLive: 'muted' as const, subCrashed: 'red' as const },
   /** The head dot breathes while the run is live. */
   pulse: { periodMs: 220, amount: 0.35 },
-  /** Text shown while running or crashed. {multiplier} is filled in by the scene. */
+  /** Translation keys of the text shown while running or crashed (the English text is in i18n/en.ts). */
   texts: {
-    live: 'CASH OUT BEFORE IT CRASHES',
-    crashed: 'CRASHED AT {multiplier}x',
-    boost: 'GOAL BOOST\n+{boost}x',
-  },
+    live: 'acca.curve.live',
+    crashed: 'acca.curve.crashed',
+    boost: 'acca.curve.boost',
+  } satisfies Record<string, AccaKey>,
   /** Labels, built from config. Ids `label`, `sub` and `boost` are updated by the scene. */
   elements: [
     {

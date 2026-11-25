@@ -1,9 +1,7 @@
-/* Last Man Standing: phone-width column, PBF tokens from src/styles.css. */
+/* Last Man Standing on the core GameLayout (compact playable unit + scrolling info); PBF tokens from
+   src/styles.css. Each screen (setup, play, match, banked) fills the same slots. */
 .lastmanstanding {
-  display: grid;
-  gap: 12px;
-  align-content: start;
-  padding: 0 12px 16px;
+  --pbf-play-min: 400px;
   --lms-home: var(--status-win);
   --lms-draw: #6e6585;
   --lms-away: #ff5a6e;
@@ -182,18 +180,12 @@
   gap: 6px;
 }
 .lms-stats {
-  position: sticky;
-  top: 0;
-  z-index: 6;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
-  margin: 0 -12px;
-  padding: 6px 12px 8px;
-  background: linear-gradient(180deg, #24123d 75%, rgba(36, 18, 61, 0));
 }
 .lms-stats .pbf-card {
-  padding: 6px 10px;
+  padding: 4px 8px;
 }
 .lms-stats small {
   display: block;
@@ -439,28 +431,30 @@
   color: var(--text-primary);
 }
 .lms-lockbar {
-  position: sticky;
-  bottom: 8px;
-  box-shadow: 0 -8px 16px rgba(18, 10, 31, 0.8);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 8px 8px 12px;
+  display: grid;
+  gap: 6px;
+  padding: 6px 8px 8px;
   border: 1px solid var(--action-primary);
   border-radius: var(--radius-lg);
   background: var(--surface-card);
 }
 .lms-lockbar p {
-  flex: 1;
   min-width: 0;
   margin: 0;
   font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lms-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 6px;
 }
 .lms-lockbar .pbf-btn {
-  flex: none;
   min-height: 44px;
-  padding: 11px 14px;
+  padding: 10px 8px;
+  font-size: 13px;
 }
 
 /* planner */
@@ -926,7 +920,7 @@
   font-weight: 800;
   font-size: 12px;
 }
-.lms-match .events {
+.lastmanstanding .events {
   display: grid;
   gap: 2px;
   margin: 10px 0;
@@ -934,42 +928,42 @@
   list-style: none;
   font-size: 13px;
 }
-.lms-match .events li.a {
+.lastmanstanding .events li.a {
   text-align: right;
 }
-.lms-match .events li.ch {
+.lastmanstanding .events li.ch {
   color: var(--text-secondary);
   font-size: 12px;
 }
-.lms-match .verdict {
+.lastmanstanding .verdict {
   margin: 12px 0 6px;
   text-align: center;
 }
-.lms-match .verdict h3 {
+.lastmanstanding .verdict h3 {
   font-size: 26px;
   text-transform: uppercase;
 }
-.lms-match .verdict.win h3 {
+.lastmanstanding .verdict.win h3 {
   color: var(--status-win);
 }
-.lms-match .verdict.lose h3 {
+.lastmanstanding .verdict.lose h3 {
   color: var(--status-loss);
 }
-.lms-match .verdict p {
+.lastmanstanding .verdict p {
   margin: 6px 0 0;
   color: var(--text-secondary);
   font-size: 13px;
 }
-.lms-match .actions {
+.lastmanstanding .actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 12px;
 }
-.lms-match .actions.one {
+.lastmanstanding .actions.one {
   grid-template-columns: 1fr;
 }
-.lms-match .others {
+.lastmanstanding .others {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 4px 8px;
@@ -978,16 +972,16 @@
   border-top: 1px solid var(--surface-card-hi);
   font-size: 12px;
 }
-.lms-match .others .hd {
+.lastmanstanding .others .hd {
   grid-column: 1 / -1;
   margin-bottom: 4px;
   color: var(--text-secondary);
   font-weight: 800;
 }
-.lms-match .others .h {
+.lastmanstanding .others .h {
   text-align: right;
 }
-.lms-match .others .s {
+.lastmanstanding .others .s {
   font-weight: 800;
   text-align: center;
 }
@@ -995,4 +989,89 @@
   .lms-match .pv .flash {
     transition: none;
   }
+}
+
+/* ---------- compact layout ---------- */
+.lms-stats small {
+  font-size: 10px;
+}
+.lms-stats b {
+  font-size: 15px;
+}
+.lastmanstanding .pbf-play-head {
+  display: grid;
+  gap: 6px;
+}
+.lms-setup .lms-panel {
+  gap: 6px;
+  padding: 8px;
+}
+.lms-setup .lms-opt {
+  padding: 6px 8px;
+}
+/* setup stage: drop the option descriptions when the frame is short (they repeat in the info section) */
+@container pbf-frame (max-height: 760px) {
+  .lms-setup .lms-opt small {
+    display: none;
+  }
+}
+.lms-info-title {
+  font-size: 16px;
+}
+.lms-notice {
+  color: var(--status-loss);
+}
+.lms-wait {
+  margin: 0;
+  padding: 12px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+/* play stage: the game week's fixtures; the list scrolls inside the stage, the lock bar never moves */
+.lms-week {
+  display: grid;
+  gap: 6px;
+}
+.lms-play .lms-pick {
+  min-height: 56px;
+}
+/* match stage: board and pitch sized to the stage, verdict and actions in the controls */
+.lms-matchview .lms-match {
+  padding: 8px 10px;
+}
+.lms-matchview .lms-match .board {
+  margin: 6px 0;
+}
+.lms-matchview .lms-match .score {
+  font-size: 30px;
+}
+.lms-matchview .lms-match .pv {
+  width: min(100%, calc(30cqh * 105 / 68));
+  margin: 0 auto;
+}
+.lms-matchview .result {
+  display: grid;
+  gap: 6px;
+}
+.lastmanstanding .pbf-play-controls .verdict {
+  margin: 0;
+}
+.lastmanstanding .pbf-play-controls .verdict h3 {
+  font-size: 18px;
+}
+.lastmanstanding .pbf-play-controls .verdict p {
+  margin-top: 2px;
+  font-size: 12px;
+}
+.lastmanstanding .pbf-play-controls .actions {
+  margin-top: 0;
+}
+.lastmanstanding .pbf-info .events {
+  margin: 0;
+}
+.lastmanstanding .pbf-info .others {
+  margin-top: 0;
+  padding: 10px 12px;
+  border-top: 0;
 }

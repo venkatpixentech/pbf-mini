@@ -2,6 +2,8 @@
 // Text, Sprite and Graphics, so layout and styling stay in the config file.
 import { Assets, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 
+import { translate } from 'core/i18n';
+
 import { COLORS, FONTS } from './theme';
 import {
   type ColorRef,
@@ -35,6 +37,25 @@ function textureOf(alias: string): Texture {
 function bound(data: ViewData, key: string): string | number {
   if (!(key in data)) warnOnce(`bind "${key}" has no value in the data`);
   return data[key] ?? '';
+}
+
+// translated texts and what they were built from, so a language switch can relabel them in place
+const translated = new WeakMap<Text, { key: string; data: ViewData; upper: boolean }>();
+
+const translateText = (key: string, data: ViewData, upper: boolean) => {
+  const value = translate(fill(key, data), data);
+  return upper ? value.toUpperCase() : value;
+};
+
+/** Re-translates every `textKey` text under `root` (called when the language changes). */
+export function relabelTexts(root: Container) {
+  for (const child of root.children) {
+    if (child instanceof Text) {
+      const source = translated.get(child);
+      if (source) child.text = translateText(source.key, source.data, source.upper);
+    }
+    if (child instanceof Container) relabelTexts(child);
+  }
 }
 
 // each config array is validated once, not on every card or label build
@@ -78,8 +99,13 @@ export function buildElements(elements: ElementConfig[], data: ViewData = {}): C
   for (const c of elements) {
     let node: Container;
     if (c.type === 'text') {
-      const value = c.bind ? String(bound(data, c.bind)) : (c.text ?? '');
-      const t = new Text({ text: c.upper ? value.toUpperCase() : value, style: textStyle(c.style) });
+      const value = c.textKey
+        ? translateText(c.textKey, data, !!c.upper)
+        : c.bind
+          ? String(bound(data, c.bind))
+          : (c.text ?? '');
+      const t = new Text({ text: c.upper && !c.textKey ? value.toUpperCase() : value, style: textStyle(c.style) });
+      if (c.textKey) translated.set(t, { key: c.textKey, data, upper: !!c.upper });
       t.anchor.set(c.anchor?.x ?? 0.5, c.anchor?.y ?? 0.5);
       node = t;
     } else if (c.type === 'sprite') {

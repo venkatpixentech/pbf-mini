@@ -1,6 +1,10 @@
 import { Application } from 'pixi.js';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
+import { markStartup, reportCriticalScene } from 'core/boot/startup';
+import { onLanguageChange } from 'core/i18n';
+
+import { relabelTexts } from './buildView';
 import type { PixiScene, SceneFactory, StageAsset } from './scene';
 import { loadStageAssets, unloadStageAssets } from './stageAssets';
 
@@ -15,11 +19,16 @@ type Props<P, E> = {
   transparent?: boolean;
   paused?: boolean;
   className?: string;
+  /**
+   * The stage the first screen cannot be played without (one per game). GameBoot keeps its loading
+   * overlay up until this stage has drawn its first frame, and records the renderer/scene/first-render marks.
+   */
+  critical?: boolean;
 };
 
 /**
  * Owns one Pixi Application per mount: create, attach, resize, pause, context loss, full teardown.
- * Nothing is shared between mounts (doc 03 A5.1). Teardown runs exactly once on every path:
+ * Nothing is shared between mounts (docs/04-RENDERING-REACT-PIXI.md). Teardown runs exactly once on every path:
  * normal unmount, unmount during async init (StrictMode), and init failure.
  */
 export function PixiStage<P, E>({
@@ -31,6 +40,7 @@ export function PixiStage<P, E>({
   transparent,
   paused,
   className,
+  critical,
 }: Props<P, E>) {
   const host = useRef<HTMLDivElement>(null);
   const live = useRef<{ app: Application; scene: PixiScene<P, E> } | null>(null);
@@ -67,6 +77,7 @@ export function PixiStage<P, E>({
           antialias: true,
         });
         started.app = true;
+        if (critical) markStartup('renderer');
 
         step = 'assets';
         const loading = loadStageAssets(assets);
@@ -86,6 +97,13 @@ export function PixiStage<P, E>({
         const onResize = () => instance.resize(app.screen.width, app.screen.height);
         app.renderer.on('resize', onResize);
         disposers.push(() => app.renderer.off('resize', onResize));
+        // Pixi's resizeTo follows window resizes only. The host box also changes without one (layout slot,
+        // operator container, info panel growing), so watch the box itself. Same Application: no re-init.
+        if (typeof ResizeObserver !== 'undefined') {
+          const observer = new ResizeObserver(() => app.queueResize());
+          observer.observe(el);
+          disposers.push(() => observer.disconnect());
+        }
 
         const onVisibility = () => {
           if (document.hidden || latest.current.paused) app.ticker.stop();
@@ -93,6 +111,9 @@ export function PixiStage<P, E>({
         };
         document.addEventListener('visibilitychange', onVisibility);
         disposers.push(() => document.removeEventListener('visibilitychange', onVisibility));
+
+        // a language switch relabels every translated text in the stage, in place
+        disposers.push(onLanguageChange(() => relabelTexts(app.stage)));
 
         step = 'scene';
         started.scene = true;
@@ -102,10 +123,19 @@ export function PixiStage<P, E>({
         );
         if (cancelled) return;
         onResize();
+        if (critical) {
+          markStartup('scene');
+          app.render(); // draw the first frame now rather than on the next tick, so readiness means drawn
+          markStartup('first-render');
+          reportCriticalScene(true);
+        }
         if (latest.current.paused) app.ticker.stop();
         live.current = { app, scene: instance };
       } catch (error) {
-        if (!cancelled) latest.current.onError?.({ kind: step, error });
+        if (!cancelled) {
+          if (critical) reportCriticalScene(false); // never leave the boot overlay up on a failed stage
+          latest.current.onError?.({ kind: step, error });
+        }
       } finally {
         done = true;
         if (cancelled) teardown();

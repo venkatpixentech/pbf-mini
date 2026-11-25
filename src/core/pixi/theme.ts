@@ -16,14 +16,5 @@ export const FONTS = {
   body: '"Avenir Next", Mulish, system-ui, sans-serif',
 } as const;
 
-export type Tier = 'gold' | 'silver' | 'bronze';
-
-/** PBF card tiers: face colour and rim colour. */
-export const TIER_COLORS: Record<Tier, { face: number; rim: number }> = {
-  gold: { face: 0xe2b552, rim: 0xf8e2a0 },
-  silver: { face: 0xc9ced6, rim: 0xffffff },
-  bronze: { face: 0xd49770, rim: 0xf6cfae },
-};
-
 export type ColorName = keyof typeof COLORS;
 export type FontName = keyof typeof FONTS;

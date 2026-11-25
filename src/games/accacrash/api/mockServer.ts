@@ -1,8 +1,11 @@
 // MOCK BACKEND for Acca Crash. Stands in for the real server until its contract exists (Q1).
 // It owns the crash point, goal boosts, auto and manual cash-outs and the balance; the UI only renders replies.
+// The server also owns the round timeline: it opens and closes betting, starts the run and ends it by its
+// own clock. The client only displays countdowns and polls the state; it never starts or settles a round.
 // Multiplier: m(t) = e^(GROWTH * t) + boosts so far. Crash point M: P(M >= x) = RTP / x (standard crash curve).
 // Boosts only change WHEN the run reaches M, never M itself, so they do not change the return.
 import type { SessionErrorCode } from '../../../core/services/apiError.ts';
+import { createMockServerClock, type MockServerClock } from '../../../core/round/mockClock.ts';
 import { mockTransport } from '../../../core/services/mockTransport.ts';
 import { roundMoney } from '../../../core/services/money.ts';
 import { MOCK_SCORERS, TIER_BOOST } from './mockData.ts';
@@ -10,8 +13,10 @@ import {
   type AccaCrashApi,
   type Bet,
   type GoalEvent,
+  type NextRoundResponse,
   type Panel,
   type RoundInfo,
+  type RoundTiming,
   type ScorerCard,
   type StatusResponse,
 } from './types.ts';
@@ -68,35 +73,44 @@ export function planRun(cards: ScorerCard[], random: () => number): Run {
   return { crashPoint, crashAtMs: timeToReach(crashPoint, steps), steps, goals };
 }
 
+export const BETTING_MS = 5000;
+export const ENDED_HOLD_MS = 3000;
+
 type Options = {
   latencyMs?: number;
   random?: () => number;
-  now?: () => number;
+  clock?: MockServerClock;
   startBalance?: number;
   currency?: string;
-  /** Simulate a session failure at init (tests the boot error screen). */
   initError?: SessionErrorCode | null;
+  bettingMs?: number;
+  endedHoldMs?: number;
 };
 
 export function createMockServer({
   latencyMs = 80,
   random = Math.random,
-  now = Date.now,
+  clock = createMockServerClock(),
   startBalance = START_BALANCE,
   currency = 'GBP',
   initError = null,
+  bettingMs = BETTING_MS,
+  endedHoldMs = ENDED_HOLD_MS,
 }: Options = {}): AccaCrashApi {
   let balance = startBalance;
   let roundNo = 0;
   let round: RoundInfo;
-  let phase: 'betting' | 'running' | 'ended' = 'betting';
-  let run: Run | null = null;
-  let startedAt = 0;
+  let run: Run;
+  let crashRecorded = false;
+  let seq = 0;
+  let nextRoundCache: { response: NextRoundResponse } | null = null;
   const history: number[] = [];
   const bets = new Map<Panel, Bet>();
+  const applied = new Map<string, unknown>();
 
   const { reply, fail } = mockTransport(latencyMs);
   const betList = () => [...bets.values()].map((b) => ({ ...b }));
+  const nowMs = () => clock.now();
 
   const deal = (): ScorerCard[] => {
     const pool = [...MOCK_SCORERS];
@@ -105,119 +119,178 @@ export function createMockServer({
       return { id: `c${roundNo}-${i}`, ...s, boost: TIER_BOOST[s.tier] };
     });
   };
-  const openRound = () => {
+  const timing = (opensAt: number, closesAt: number): RoundTiming => ({
+    serverTime: nowMs(),
+    opensAt,
+    closesAt,
+  });
+  const openRound = (opensAt: number) => {
     roundNo += 1;
-    round = { id: `r${roundNo}`, cards: deal() };
-    phase = 'betting';
-    run = null;
+    const cards = deal();
+    round = { id: `r${roundNo}`, cards, timing: timing(opensAt, opensAt + bettingMs) };
+    run = planRun(cards, random);
+    crashRecorded = false;
     bets.clear();
   };
+  const snapshotRound = (): RoundInfo => ({
+    ...round,
+    timing: timing(round.timing.opensAt, round.timing.closesAt),
+  });
+
+  const startedAt = () => round.timing.closesAt;
+  const isBetting = () => nowMs() >= round.timing.opensAt && nowMs() < round.timing.closesAt;
+  const elapsed = () => Math.max(0, nowMs() - startedAt());
+  const crashAt = () => startedAt() + run.crashAtMs;
+  const nextOpensAt = () => crashAt() + endedHoldMs;
 
   const multiplierAt = (ms: number) => {
     let boost = 0;
-    for (const s of run!.steps) if (s.atMs <= ms) boost = s.boostTotal;
+    for (const s of run.steps) if (s.atMs <= ms) boost = s.boostTotal;
     return Math.floor((base(ms) + boost) * 100) / 100;
   };
 
-  /** Settle auto cash-outs and losses up to elapsed time `ms`. Credits each bet exactly once. */
   const resolve = (ms: number) => {
     for (const bet of bets.values()) {
       if (bet.status !== 'placed') continue;
       if (
         bet.autoCashOut !== null &&
-        bet.autoCashOut < run!.crashPoint &&
-        ms >= timeToReach(bet.autoCashOut, run!.steps)
+        bet.autoCashOut < run.crashPoint &&
+        ms >= timeToReach(bet.autoCashOut, run.steps)
       ) {
         bet.status = 'cashed';
         bet.cashedAt = bet.autoCashOut;
         bet.payout = roundMoney(bet.stake * bet.autoCashOut);
         balance = roundMoney(balance + bet.payout);
-      } else if (ms >= run!.crashAtMs) {
+      } else if (ms >= run.crashAtMs) {
         bet.status = 'lost';
       }
     }
-    if (ms >= run!.crashAtMs && phase === 'running') {
-      phase = 'ended';
-      history.unshift(run!.crashPoint);
+    if (ms >= run.crashAtMs && !crashRecorded) {
+      crashRecorded = true;
+      history.unshift(run.crashPoint);
       history.splice(10);
     }
   };
 
   const status = (): StatusResponse => {
-    const ms = Math.max(0, now() - startedAt);
+    if (nowMs() < round.timing.closesAt) {
+      return {
+        roundId: round.id,
+        phase: 'bettingOpen',
+        seq: ++seq,
+        serverTime: nowMs(),
+        nextOpensAt: null,
+        elapsedMs: 0,
+        multiplier: 1,
+        crashed: false,
+        crashPoint: null,
+        goals: [],
+        bets: betList(),
+        balance,
+      };
+    }
+    const ms = elapsed();
     resolve(ms);
-    const crashed = phase === 'ended';
-    const shownMs = Math.min(ms, run!.crashAtMs);
+    const crashed = ms >= run.crashAtMs;
+    const shownMs = Math.min(ms, run.crashAtMs);
     return {
+      roundId: round.id,
+      phase: crashed ? 'completed' : 'running',
+      seq: ++seq,
+      serverTime: nowMs(),
+      nextOpensAt: crashed ? nextOpensAt() : null,
       elapsedMs: Math.round(shownMs),
-      multiplier: crashed ? run!.crashPoint : multiplierAt(ms),
+      multiplier: crashed ? run.crashPoint : multiplierAt(ms),
       crashed,
-      crashPoint: crashed ? run!.crashPoint : null,
-      goals: run!.goals.filter((g) => g.atMs <= shownMs),
+      crashPoint: crashed ? run.crashPoint : null,
+      goals: run.goals.filter((g) => g.atMs <= shownMs),
       bets: betList(),
       balance,
     };
   };
 
-  openRound();
+  const once = <T>(requestId: string, make: () => Promise<T>): Promise<T> =>
+    applied.has(requestId) ? Promise.resolve(applied.get(requestId) as T) : make();
+  const remember = <T>(requestId: string, value: T): T => {
+    applied.set(requestId, value);
+    return value;
+  };
+
+  openRound(nowMs());
 
   return {
     init: () =>
       initError
         ? fail(initError)
-        : reply({ balance, currency, stakes: STAKES, autoOptions: AUTO_OPTIONS, round, history: [...history] }),
+        : reply({
+            balance,
+            currency,
+            stakes: STAKES,
+            autoOptions: AUTO_OPTIONS,
+            round: snapshotRound(),
+            history: [...history],
+          }),
 
-    placeBet(roundId, panel, stake, autoCashOut) {
-      if (phase !== 'betting' || roundId !== round.id) return fail('ROUND_CLOSED');
-      if (bets.has(panel)) return fail('BET_EXISTS');
-      if (!STAKES.includes(stake)) return fail('INVALID_STAKE');
-      if (autoCashOut !== null && !AUTO_OPTIONS.includes(autoCashOut)) return fail('INVALID_AUTO');
-      if (roundMoney(stake) > roundMoney(balance)) return fail('INSUFFICIENT_BALANCE');
-      balance = roundMoney(balance - stake);
-      bets.set(panel, { panel, stake, autoCashOut, status: 'placed', cashedAt: null, payout: 0 });
-      return reply({ balance, bets: betList() });
+    placeBet(roundId, panel, stake, autoCashOut, requestId) {
+      return once(requestId, () => {
+        if (roundId !== round.id) return fail('ROUND_CLOSED');
+        if (nowMs() < round.timing.opensAt) return fail('ROUND_NOT_OPEN');
+        if (!isBetting()) return fail('ROUND_CLOSED');
+        if (bets.has(panel)) return fail('BET_EXISTS');
+        if (!STAKES.includes(stake)) return fail('INVALID_STAKE');
+        if (autoCashOut !== null && !AUTO_OPTIONS.includes(autoCashOut)) return fail('INVALID_AUTO');
+        if (roundMoney(stake) > roundMoney(balance)) return fail('INSUFFICIENT_BALANCE');
+        balance = roundMoney(balance - stake);
+        bets.set(panel, { panel, stake, autoCashOut, status: 'placed', cashedAt: null, payout: 0 });
+        return reply(remember(requestId, { serverTime: nowMs(), balance, bets: betList() }));
+      });
     },
 
-    cancelBet(roundId, panel) {
-      if (phase !== 'betting' || roundId !== round.id) return fail('ROUND_CLOSED');
-      const bet = bets.get(panel);
-      if (!bet) return fail('NO_BET');
-      balance = roundMoney(balance + bet.stake);
-      bets.delete(panel);
-      return reply({ balance, bets: betList() });
-    },
-
-    start(roundId) {
-      if (phase !== 'betting' || roundId !== round.id) return fail('ROUND_CLOSED');
-      run = planRun(round.cards, random);
-      startedAt = now();
-      phase = 'running';
-      return reply(status());
+    cancelBet(roundId, panel, requestId) {
+      return once(requestId, () => {
+        if (roundId !== round.id || !isBetting()) return fail('ROUND_CLOSED');
+        const bet = bets.get(panel);
+        if (!bet) return fail('NO_BET');
+        balance = roundMoney(balance + bet.stake);
+        bets.delete(panel);
+        return reply(remember(requestId, { serverTime: nowMs(), balance, bets: betList() }));
+      });
     },
 
     status(roundId) {
-      if (!run || roundId !== round.id) return fail('ROUND_CLOSED');
+      if (roundId !== round.id) return fail('ROUND_CLOSED');
       return reply(status());
     },
 
-    cashOut(roundId, panel) {
-      if (!run || roundId !== round.id) return fail('ROUND_CLOSED');
-      const ms = Math.max(0, now() - startedAt);
-      resolve(ms); // an auto cash-out or the crash may already have happened
-      const bet = bets.get(panel);
-      if (!bet || bet.status !== 'placed') return phase === 'ended' ? fail('ROUND_CLOSED') : fail('NO_BET');
-      const m = multiplierAt(ms);
-      bet.status = 'cashed';
-      bet.cashedAt = m;
-      bet.payout = roundMoney(bet.stake * m);
-      balance = roundMoney(balance + bet.payout);
-      return reply(status());
+    cashOut(roundId, panel, requestId) {
+      return once(requestId, () => {
+        if (roundId !== round.id) return fail('ROUND_CLOSED');
+        if (nowMs() < round.timing.closesAt) return fail('ROUND_NOT_STARTED');
+        const ms = elapsed();
+        resolve(ms);
+        const bet = bets.get(panel);
+        if (!bet || bet.status !== 'placed') return ms >= run.crashAtMs ? fail('ROUND_CLOSED') : fail('NO_BET');
+        const m = multiplierAt(ms);
+        bet.status = 'cashed';
+        bet.cashedAt = m;
+        bet.payout = roundMoney(bet.stake * m);
+        balance = roundMoney(balance + bet.payout);
+        return reply(remember(requestId, status()));
+      });
     },
 
     next() {
-      if (phase !== 'ended') return fail('ROUND_CLOSED');
-      openRound();
-      return reply({ round, history: [...history] });
+      // a repeated next() while the round it opened is still in betting returns that same round;
+      // once that round has started, next() means "advance past it" again
+      if (nextRoundCache && nextRoundCache.response.round.id === round.id && nowMs() < round.timing.closesAt)
+        return reply({ ...nextRoundCache.response, round: snapshotRound(), serverTime: nowMs() });
+      if (elapsed() < run.crashAtMs || nowMs() < round.timing.closesAt) return fail('ROUND_NOT_READY');
+      if (nowMs() < nextOpensAt()) return fail('ROUND_NOT_READY');
+      resolve(elapsed());
+      const opensAt = nextOpensAt();
+      openRound(opensAt);
+      nextRoundCache = { response: { serverTime: nowMs(), round: snapshotRound(), history: [...history] } };
+      return reply(nextRoundCache.response);
     },
   };
 }

@@ -1,3 +1,13 @@
+/* Compact layout (core GameLayout): header + round banner, card stage, stake/cash-out + markets as controls.
+   The playable unit needs about 380 px; the rest of the frame is the scrolling info (history, run, feed). */
+.hol {
+  --pbf-play-min: 380px;
+}
+.hol .pbf-play-head {
+  display: grid;
+  gap: 6px;
+}
+
 .hol-last {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -37,26 +47,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px 14px;
+  padding: 6px 10px 8px;
   border: 1px solid color-mix(in srgb, var(--status-live) 70%, transparent);
 }
 .hol-banner h2 {
   margin: 0;
-  font: 900 16px/1.1 var(--font-display);
+  font: 900 15px/1.1 var(--font-display);
   text-transform: uppercase;
 }
 .hol-banner h2 em {
   font-style: normal;
   color: var(--action-primary);
-  font-size: 22px;
+  font-size: 19px;
 }
 .hol-banner p {
-  margin: 2px 0 0;
+  margin: 1px 0 0;
   font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-secondary);
 }
 .hol-count {
-  font: 900 34px/1 var(--font-display);
+  font: 900 28px/1 var(--font-display);
   color: var(--status-live);
   min-width: 28px;
   text-align: right;
@@ -117,16 +130,33 @@
 }
 
 .hol-labels {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
-  padding: 0 12%;
-  margin-bottom: -6px;
+  padding: 0 14%;
+  pointer-events: none;
+}
+.hol-labels .pbf-caption {
+  font-size: 10px;
+}
+/* the card stage is a size container so the labels only show when the cards leave room for them */
+.hol-stage {
+  container: hol-stage / size;
+}
+@container hol-stage (max-height: 230px) {
+  .hol-labels {
+    display: none;
+  }
 }
 .hol-labels .next {
   color: var(--action-primary);
 }
 .hol-stage {
-  /* height comes from the view config: scenes/cardReveal.config.ts (canvas) */
+  /* fills the GameLayout stage slot; the card scene scales itself to whatever size it gets */
   border-radius: var(--radius-lg);
   overflow: hidden;
   border-top: 2px solid var(--action-primary);
@@ -141,12 +171,13 @@
 .hol-markets {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 .hol-markets button {
   display: grid;
-  gap: 4px;
-  padding: 10px 4px;
+  gap: 3px;
+  min-height: 44px;
+  padding: 6px 4px;
   border-radius: var(--radius-md);
   border: 1px solid var(--action-primary);
   background: var(--surface-odds);
@@ -158,7 +189,7 @@
   border-color: var(--action-secondary);
 }
 .hol-markets b {
-  font: 900 18px/1 var(--font-display);
+  font: 900 16px/1 var(--font-display);
   color: var(--action-primary);
 }
 .hol-markets button.down b {
@@ -179,6 +210,7 @@
 }
 .hol-message {
   margin: 0;
+  font-size: 13px;
   text-align: center;
   color: var(--action-primary);
   font-weight: 800;
@@ -331,4 +363,20 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+}
+
+/* ---------- keyframes (copied from the prototype; used only by this game) ---------- */
+@keyframes pbfStamp {
+  0% {
+    transform: scale(2.2) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.92) rotate(-12deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-12deg);
+    opacity: 1;
+  }
 }

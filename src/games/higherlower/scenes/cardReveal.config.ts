@@ -32,7 +32,7 @@ const ink = (
 /** Card size in canvas pixels, centred on its own origin. */
 export const CARD = { width: 150, height: 210, radius: 12 };
 
-/** The data a card face binds: ovr, position, name, club, attack, creativity, defence, tier, tierName, nation, face, rim. */
+/** The data a card face binds: ovr, position, name, club, attack, creativity, defence, tier, nation, face, rim. The tier name is the translated `hol.tier.<tier>`. */
 const statCell = (id: string, icon: string, bind: string, x: number): ElementConfig => ({
   type: 'group',
   id,
@@ -114,7 +114,7 @@ export const FACE: ElementConfig[] = [
   {
     type: 'text',
     id: 'tier',
-    bind: 'tierName',
+    textKey: 'hol.tier.{tier}',
     upper: true,
     x: 0,
     y: 97,
@@ -173,9 +173,11 @@ export const VS: ElementConfig[] = [
 export const cardRevealConfig = {
   /** Canvas portion: a share of the screen height, kept between min and max (px). */
   canvas: { heightPct: 32, minHeight: 220, maxHeight: 300 },
-  // Badge frames from PBF's progressHub atlas; real country flags and stat icons from PBF's shared asset pack.
+  // Badge frames cut losslessly from PBF's progressHub atlas into a game atlas holding only the three tiers
+  // (28 KB PNG instead of the 150 KB, 1229x2032 shared atlas); real country flags and stat icons from PBF's
+  // shared asset pack.
   assets: [
-    { alias: 'progressHub', src: 'common/images/@1x/progressHub.json' },
+    { alias: 'hlBadges', src: 'higherlower/images/badges.json' },
     ...NATIONS.map((n) => ({ alias: `flag-${n}`, src: `common/images/countryIcons/${n}Icon.svg` })),
     { alias: 'statAttack', src: 'common/icon/attack.svg' },
     { alias: 'statCreativity', src: 'common/icon/creativity.svg' },

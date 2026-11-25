@@ -1,0 +1,6 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "baseUrl": "..", "types": [] },
+  "include": ["e2e", "../playwright.config.ts"],
+  "exclude": []
+}

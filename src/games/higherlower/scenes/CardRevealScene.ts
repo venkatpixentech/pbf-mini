@@ -2,8 +2,8 @@ import { Container, type Text, type Ticker } from 'pixi.js';
 
 import { buildElements } from 'core/pixi/buildView';
 import type { PixiScene, SceneContext, StageAsset } from 'core/pixi/scene';
-import { TIER_COLORS, type Tier } from 'core/pixi/theme';
 
+import { TIER_COLORS, type Tier } from './tier';
 import { BACK, CARD, cardRevealConfig, FACE, NATIONS, type Nation, VS } from './cardReveal.config';
 
 export type { Nation, Tier };
@@ -31,7 +31,6 @@ const { width: W, height: H } = CARD;
 const cardFace = (card: Card) =>
   buildElements(FACE, {
     ...card,
-    tierName: card.tier,
     face: TIER_COLORS[card.tier].face,
     rim: TIER_COLORS[card.tier].rim,
   });
