@@ -1,0 +1,501 @@
+.acca .pbf-title .pbf-pill {
+  vertical-align: middle;
+  font-size: 10px;
+}
+
+.acca-history {
+  display: flex;
+  gap: 6px;
+  overflow: hidden;
+  min-height: 20px;
+}
+.acca-history span {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font: 800 11px/1.4 var(--font-body);
+  background: var(--surface-card-hi);
+}
+.acca-history .low {
+  background: var(--status-live);
+}
+
+.acca-stage {
+  /* height comes from the view config: scenes/crashCurve.config.ts (canvas) */
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--surface-card-hi);
+  background: linear-gradient(160deg, #0d3b34 0%, #102a2e 45%, var(--surface-raised) 100%);
+  transition: border-color 0.2s var(--ease-standard);
+}
+.acca-stage.running {
+  border-color: var(--action-primary);
+  box-shadow: var(--shadow-glow-primary);
+}
+.acca-stage.crashed {
+  border-color: var(--status-live);
+  box-shadow: none;
+}
+
+.acca-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.acca-tiers span,
+.acca-card {
+  border-radius: var(--radius-sm);
+  color: var(--text-on-accent);
+}
+.acca-tiers span {
+  padding: 4px 6px;
+  text-align: center;
+  font: 800 11px/1.3 var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.bronze {
+  background: linear-gradient(180deg, #f2bf98, #d49770 40%, #a7653f);
+}
+.silver {
+  background: linear-gradient(180deg, #f4f6f9, #d3d8df 40%, #a9b0bb);
+}
+.gold {
+  background: linear-gradient(180deg, #f3d27a, #e2b552 40%, #c8952f);
+}
+
+.acca-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.acca-card {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: 10px 6px 8px;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+.acca-card b {
+  font: 900 14px/1.1 var(--font-display);
+  text-transform: uppercase;
+  text-align: center;
+}
+.acca-card small {
+  font: 600 11px/1 var(--font-body);
+  opacity: 0.75;
+}
+.acca-card span {
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-app);
+  color: var(--action-primary);
+  font: 800 11px/1.4 var(--font-body);
+}
+.acca-card.scored {
+  border-color: var(--action-primary);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.acca-ticker {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--coin-pbf);
+  color: var(--text-on-accent);
+  font: 800 12px/1.3 var(--font-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acca-ticker.empty {
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.acca-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+/* the frame can be narrower than the window (browser zoom, short windows): switch on the frame width */
+@container (max-width: 400px) {
+  .acca-panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.acca-panel {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+.acca-auto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 26px;
+}
+.acca-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 800 12px/1 var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.acca-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.acca-switch span {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-card-hi);
+  transition: background 0.15s;
+}
+.acca-switch span::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--pbf-white);
+  transition: transform 0.15s var(--ease-standard);
+}
+.acca-switch input:checked + span {
+  background: var(--action-primary);
+}
+.acca-switch input:checked + span::after {
+  transform: translateX(14px);
+}
+.acca-switch input:focus-visible + span {
+  outline: 2px solid var(--action-secondary);
+}
+.acca-auto select {
+  font: 800 12px/1 var(--font-body);
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  border: 1px solid var(--action-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+}
+.acca-stepper {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  text-align: center;
+}
+.acca-stepper b {
+  font: 900 18px/1 var(--font-display);
+}
+.acca-stepper button {
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-card-hi);
+  font: 900 18px/1 var(--font-display);
+}
+.acca-stepper button:disabled {
+  opacity: 0.4;
+}
+.acca-result {
+  margin: 0;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font: 800 13px/1.2 var(--font-body);
+  text-transform: uppercase;
+}
+.acca-result.win {
+  background: color-mix(in srgb, var(--status-win) 20%, transparent);
+  color: var(--status-win);
+}
+.acca-result.lose {
+  background: color-mix(in srgb, var(--status-loss) 20%, transparent);
+  color: var(--status-loss);
+}
+.acca-message {
+  margin: 0;
+  text-align: center;
+  color: var(--status-loss);
+  font-weight: 800;
+}
+.acca-panel .stake-chips {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.acca-panel .stake-chips button {
+  padding: 7px 0;
+  font-size: 12px;
+}
+
+/* ---------- motion (prototype keyframes in styles.css) ---------- */
+.acca-stage {
+  position: relative;
+}
+.acca-countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  pointer-events: none;
+}
+.acca-countdown span {
+  font: 900 88px/1 var(--font-display);
+  color: var(--action-primary);
+  text-shadow: var(--shadow-glow-primary);
+}
+.acca-countdown small {
+  font: 800 12px/1 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.acca-goal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  pointer-events: none;
+  overflow: hidden;
+}
+.acca-strobe,
+.accacrash-strobe {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.acca-strobe {
+  background: var(--action-primary);
+  animation: pbfStrobe 700ms linear 1 forwards;
+}
+.accacrash-strobe {
+  background: var(--status-live);
+  animation: pbfCrash 1100ms linear 1 forwards;
+}
+.acca-rays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160px;
+  height: 160px;
+  margin: -80px 0 0 -80px;
+  border-radius: 50%;
+  border: 6px solid var(--coin-pbf);
+  opacity: 0;
+  animation: pbfRays 650ms var(--ease-standard) 80ms 1 forwards;
+}
+.acca-rays.late {
+  border-color: var(--action-primary);
+  animation-delay: 260ms;
+}
+.acca-goal-banner {
+  position: relative;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--action-primary);
+  color: var(--text-on-accent);
+  font: 900 20px/1 var(--font-display);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: pbfPop 1900ms var(--ease-pop) 1 forwards;
+}
+.acca-goal-boost {
+  position: relative;
+  font: 900 34px/1 var(--font-display);
+  color: var(--coin-pbf);
+  text-shadow: 0 0 12px rgba(229, 255, 3, 0.5);
+  opacity: 0;
+  animation: pbfBoost 1900ms var(--ease-pop) 1 forwards;
+}
+/* deal: cards fan in, staggered as in the prototype (300 / 440 / 580 ms) */
+.acca-card.deal-0 {
+  animation: pbfFanL 700ms var(--ease-pop) 300ms both;
+}
+.acca-card.deal-1 {
+  animation: pbfFanC 700ms var(--ease-pop) 440ms both;
+}
+.acca-card.deal-2 {
+  animation: pbfFanR 700ms var(--ease-pop) 580ms both;
+}
+.acca-card.scored {
+  animation: pbfLegHit 700ms var(--ease-pop) 1;
+}
+.acca-ticker:not(.empty) {
+  animation: pbfRise 400ms var(--ease-standard) both;
+}
+
+.acca-card-flag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 16px;
+  height: 11px;
+  border-radius: 2px;
+}
+.acca-card {
+  position: relative;
+}
+
+.acca-crowd {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+}
+.acca-crowd-tabs {
+  display: flex;
+  gap: 6px;
+}
+.acca-crowd-tabs button {
+  flex: 1;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-card-hi);
+  color: var(--text-secondary);
+  font: 800 11px/1 var(--font-body);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.acca-crowd-tabs button[aria-selected='true'] {
+  background: var(--action-primary);
+  color: var(--text-on-accent);
+}
+.acca-crowd-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.acca-crowd-summary b {
+  color: var(--action-primary);
+  font-size: 13px;
+}
+.acca-crowd-rows {
+  display: grid;
+  gap: 2px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.acca-crowd-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 4px;
+  padding: 5px 4px;
+  font-size: 12px;
+  border-top: 1px solid var(--pbf-white-8);
+}
+.acca-crowd-row .win {
+  color: var(--status-win);
+}
+.acca-crowd-row .lose {
+  color: var(--text-muted);
+}
+
+.acca-splash {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px 16px;
+  text-align: center;
+  overflow-y: auto;
+  background:
+    linear-gradient(180deg, rgba(29, 16, 48, 0.55) 0%, rgba(29, 16, 48, 0.92) 45%, var(--surface-app) 70%);
+  animation: pbfCount 700ms var(--ease-pop) both;
+}
+.acca-splash-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font: 900 52px/0.9 var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+.acca-splash-title .accent {
+  color: var(--action-primary);
+  text-shadow: 0 0 28px rgba(0, 233, 163, 0.5);
+}
+.acca-splash-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  background: var(--action-secondary);
+  color: var(--text-on-accent);
+  font: 900 12px/1 var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.acca-splash-preview {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.acca-splash-preview strong {
+  font: 900 44px/1 var(--font-display);
+  color: var(--action-primary);
+  text-shadow: 0 0 20px rgba(0, 233, 163, 0.5);
+}
+.acca-splash-cards {
+  display: flex;
+  gap: 4px;
+  margin-top: -8px;
+}
+.acca-splash-cards .acca-card {
+  width: 72px;
+  padding: 8px 4px 6px;
+}
+.acca-splash-cards .acca-card b {
+  font-size: 11px;
+}
+.acca-splash-steps {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+.acca-splash-steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+.acca-splash-steps b {
+  font: 900 13px/1 var(--font-display);
+  text-transform: uppercase;
+}
+.acca-splash-steps span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.acca-splash .pbf-btn {
+  width: 100%;
+  margin-top: auto;
+}

@@ -1,0 +1,180 @@
+{"frames": {
+
+"bronzeBadge":
+{
+	"frame": {"x":1152,"y":2,"w":60,"h":97},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":60,"h":97},
+	"sourceSize": {"w":60,"h":98}
+},
+"challengesHubBg":
+{
+	"frame": {"x":2,"y":636,"w":1146,"h":417},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1146,"h":417},
+	"sourceSize": {"w":1146,"h":417}
+},
+"championshipIcon":
+{
+	"frame": {"x":750,"y":1886,"w":144,"h":138},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":144,"h":138},
+	"sourceSize": {"w":144,"h":138}
+},
+"championshipTabIcon":
+{
+	"frame": {"x":1152,"y":454,"w":69,"h":66},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":69,"h":66},
+	"sourceSize": {"w":69,"h":66}
+},
+"chevron":
+{
+	"frame": {"x":1192,"y":1638,"w":20,"h":34},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":20,"h":34},
+	"sourceSize": {"w":20,"h":34}
+},
+"crossDailyRewards":
+{
+	"frame": {"x":1152,"y":594,"w":60,"h":60},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":60,"h":60},
+	"sourceSize": {"w":60,"h":60}
+},
+"dailyRewardClaimed":
+{
+	"frame": {"x":1056,"y":1638,"w":132,"h":180},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":132,"h":180},
+	"sourceSize": {"w":132,"h":180}
+},
+"dailyRewardFinal":
+{
+	"frame": {"x":1056,"y":1418,"w":159,"h":216},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":159,"h":216},
+	"sourceSize": {"w":159,"h":216}
+},
+"dailyRewardHubBg":
+{
+	"frame": {"x":2,"y":1057,"w":1146,"h":357},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1146,"h":357},
+	"sourceSize": {"w":1146,"h":357}
+},
+"dailyRewardUnclaimed":
+{
+	"frame": {"x":1056,"y":1822,"w":132,"h":180},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":132,"h":180},
+	"sourceSize": {"w":132,"h":180}
+},
+"divisionTabIcon":
+{
+	"frame": {"x":1152,"y":305,"w":60,"h":75},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":60,"h":75},
+	"sourceSize": {"w":60,"h":75}
+},
+"endsInBg":
+{
+	"frame": {"x":2,"y":1886,"w":380,"h":132},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":380,"h":132},
+	"sourceSize": {"w":380,"h":132}
+},
+"expiryIcon":
+{
+	"frame": {"x":1152,"y":524,"w":60,"h":66},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":60,"h":66},
+	"sourceSize": {"w":60,"h":66}
+},
+"goldBadge":
+{
+	"frame": {"x":1152,"y":204,"w":59,"h":97},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":59,"h":97},
+	"sourceSize": {"w":59,"h":97}
+},
+"hubTabBg":
+{
+	"frame": {"x":2,"y":2,"w":1146,"h":630},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1146,"h":630},
+	"sourceSize": {"w":1146,"h":630}
+},
+"hubTabTitleBg":
+{
+	"frame": {"x":386,"y":1886,"w":360,"h":144},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":360,"h":144},
+	"sourceSize": {"w":360,"h":144}
+},
+"leagueIcon":
+{
+	"frame": {"x":898,"y":1886,"w":144,"h":126},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":144,"h":126},
+	"sourceSize": {"w":144,"h":126}
+},
+"leagueTabIcon":
+{
+	"frame": {"x":1152,"y":384,"w":75,"h":66},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":75,"h":66},
+	"sourceSize": {"w":75,"h":66}
+},
+"silverBadge":
+{
+	"frame": {"x":1152,"y":103,"w":60,"h":97},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":0,"y":1,"w":60,"h":97},
+	"sourceSize": {"w":60,"h":98}
+},
+"subChallengesHubPrBg":
+{
+	"frame": {"x":2,"y":1418,"w":1050,"h":230},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1050,"h":230},
+	"sourceSize": {"w":1050,"h":230}
+},
+"subChallengesHubStBg":
+{
+	"frame": {"x":2,"y":1652,"w":1050,"h":230},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":1050,"h":230},
+	"sourceSize": {"w":1050,"h":230}
+}},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.1",
+	"image": "progressHub.webp",
+	"format": "RGBA8888",
+	"size": {"w":1229,"h":2032},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:b459af146f25e49212aa827effda8424:01a2977da640b28b50f69fa0bac5cec8:78cf70c29726f0b713ed7f58263b9aef$"
+}
+}

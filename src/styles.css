@@ -1,0 +1,598 @@
+/* PBF theme: tokens from the Playbook Fusion design system (prototype bundles), fonts from PBF's own asset pack. */
+@font-face {
+  font-family: 'Degular';
+  src: url('/assets/common/fonts/Degular-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Degular';
+  src: url('/assets/common/fonts/Degular-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next';
+  src: url('/assets/common/fonts/AvenirNextLTPro-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next';
+  src: url('/assets/common/fonts/AvenirNextLTPro-Demi.otf') format('opentype');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next';
+  src: url('/assets/common/fonts/AvenirNextLTPro-Bold.otf') format('opentype');
+  font-weight: 800;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  /* palette */
+  --pbf-primary-700: #1d1030;
+  --pbf-primary-800: #00d1ff;
+  --pbf-primary-900: #00e9a3;
+  --pbf-secondary-600: #ad00ff;
+  --pbf-secondary-700: #e5ff03;
+  --pbf-secondary-800: #ff2072;
+  --pbf-secondary-900: #1964d5;
+  --pbf-neutral-500: #8e8797;
+  --pbf-neutral-700: #201333;
+  --pbf-neutral-800: #2f2541;
+  --pbf-neutral-900: #4a4059;
+  --pbf-white: #ffffff;
+  --pbf-white-8: rgba(255, 255, 255, 0.08);
+  --pbf-white-16: rgba(255, 255, 255, 0.16);
+  --pbf-white-64: rgba(255, 255, 255, 0.64);
+  /* semantic */
+  --action-primary: var(--pbf-primary-900);
+  --action-primary-hover: #4df3c1;
+  --action-primary-press: #00c88b;
+  --action-secondary: var(--pbf-primary-800);
+  --status-live: var(--pbf-secondary-800);
+  --status-win: var(--pbf-primary-900);
+  --status-loss: var(--pbf-secondary-800);
+  --coin-pbf: var(--pbf-secondary-700);
+  --surface-app: var(--pbf-primary-700);
+  --surface-raised: var(--pbf-neutral-700);
+  --surface-card: var(--pbf-neutral-800);
+  --surface-card-hi: var(--pbf-neutral-900);
+  --surface-odds: #160f2a;
+  --surface-market: #1d1439;
+  --text-primary: var(--pbf-white);
+  --text-secondary: var(--pbf-white-64);
+  --text-muted: var(--pbf-neutral-500);
+  --text-on-accent: var(--pbf-primary-700);
+  /* type, shape, motion */
+  --font-display: 'Degular', 'Figtree', system-ui, sans-serif;
+  --font-body: 'Avenir Next', 'Mulish', system-ui, sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-glow-primary: 0 0 16px rgba(0, 233, 163, 0.45);
+  --ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-pop: cubic-bezier(0.2, 1.5, 0.4, 1);
+  /* legacy names used by the spike page */
+  --bg: var(--surface-app);
+  --panel: var(--surface-card);
+  --text: var(--text-primary);
+  --accent: var(--action-primary);
+  --fail: var(--status-loss);
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text-primary);
+  font: 400 15px/1.45 var(--font-body);
+  background:
+    radial-gradient(120% 60% at 50% 0%, #3a1a66 0%, transparent 60%),
+    linear-gradient(180deg, #24123d 0%, var(--surface-app) 55%, #120a1f 100%) fixed;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+
+/* ---------- shared PBF components ---------- */
+.pbf-screen {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 8px 12px 24px;
+  display: grid;
+  /* one column that never grows past the frame, whatever a child's min-content is */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.pbf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pbf-title {
+  margin: 0;
+  font: 900 26px/1 var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.pbf-title em {
+  font-style: normal;
+  color: var(--action-primary);
+}
+.pbf-eyebrow {
+  display: block;
+  font: 700 11px/1 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--action-primary);
+}
+.pbf-balance {
+  display: grid;
+  justify-items: end;
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  background: var(--pbf-secondary-600);
+  font: 900 18px/1.1 var(--font-display);
+}
+.pbf-balance small {
+  font: 700 9px/1 var(--font-body);
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+.pbf-caption {
+  font: 700 11px/1.3 var(--font-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pbf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font: 800 11px/1.4 var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pbf-pill.live {
+  background: var(--status-live);
+}
+.pbf-pill.info {
+  background: var(--action-secondary);
+  color: var(--text-on-accent);
+}
+.pbf-card {
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+.pbf-btn {
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font: 800 15px/1 var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--action-primary);
+  color: var(--text-on-accent);
+  transition:
+    background 0.15s var(--ease-standard),
+    transform 0.1s;
+}
+.pbf-btn:hover:not(:disabled) {
+  background: var(--action-primary-hover);
+}
+.pbf-btn:active:not(:disabled) {
+  background: var(--action-primary-press);
+  transform: scale(0.98);
+}
+.pbf-btn:disabled {
+  background: var(--surface-card-hi);
+  color: var(--text-muted);
+}
+.pbf-btn.secondary {
+  background: var(--surface-card-hi);
+  color: var(--text-primary);
+}
+.pbf-btn.coin {
+  background: var(--coin-pbf);
+  color: var(--text-on-accent);
+}
+.pbf-footer-note {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* stake chips (core/ui/StakeChips) */
+.stake-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 6px;
+}
+.stake-chips button {
+  padding: 7px 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-card-hi);
+  font: 800 13px/1 var(--font-body);
+}
+.stake-chips button[aria-pressed='true'] {
+  background: var(--action-primary);
+  color: var(--text-on-accent);
+}
+.stake-chips button:disabled {
+  opacity: 0.45;
+}
+
+/* spike page (dev) */
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.stages {
+  display: flex;
+  gap: 8px;
+}
+.stage {
+  flex: 1;
+  height: 320px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.controls button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: transparent;
+}
+.results,
+.log {
+  padding-left: 18px;
+  font:
+    12px/1.5 ui-monospace,
+    monospace;
+}
+.pass {
+  color: var(--accent);
+}
+.fail {
+  color: var(--fail);
+}
+
+/* ---------- app frame (PBF AppShell rules) ---------- */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body {
+  background: #000;
+}
+.app-shell {
+  position: relative;
+  height: 100dvh;
+  background: #000 url('/assets/common/images/desktop/desktopBg.png') center / cover no-repeat;
+}
+.app-frame {
+  position: relative;
+  container-type: inline-size; /* lets a game switch layout on the frame width, not the window width */
+  width: 45vh;
+  max-width: 480px;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  background:
+    radial-gradient(120% 50% at 50% 0%, #3a1a66 0%, transparent 60%),
+    linear-gradient(180deg, #24123d 0%, var(--surface-app) 55%, #120a1f 100%);
+}
+.app-frame::-webkit-scrollbar {
+  display: none;
+}
+@media (max-height: 779px) {
+  .app-frame {
+    width: 55vh;
+  }
+}
+@media (max-width: 768px) {
+  .app-frame {
+    width: 100%;
+  }
+}
+.app-frame .pbf-screen {
+  max-width: none;
+}
+.app-rotate {
+  display: none;
+}
+/* phones turned to landscape (same thresholds as PBF: 500-940px wide) */
+@media (max-width: 940px) and (min-width: 500px) and (orientation: landscape) {
+  .app-rotate {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    background: #000;
+    font: 800 15px/1.4 var(--font-body);
+  }
+}
+
+/* ---------- PBF motion (keyframes copied from the prototypes) ---------- */
+@keyframes pbfLive {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 32, 114, 0.7);
+  }
+  50% {
+    opacity: 0.35;
+    box-shadow: 0 0 0 4px rgba(255, 32, 114, 0);
+  }
+}
+@keyframes pbfCrash {
+  0% {
+    opacity: 0.85;
+  }
+  10% {
+    opacity: 0.1;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  30% {
+    opacity: 0.1;
+  }
+  40% {
+    opacity: 0.55;
+  }
+  55% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0.18;
+  }
+}
+@keyframes pbfRise {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pbfFanL {
+  0% {
+    opacity: 0;
+    transform: translate(60px, 40px) rotate(0deg) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pbfFanC {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pbfFanR {
+  0% {
+    opacity: 0;
+    transform: translate(-60px, 40px) rotate(0deg) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pbfCount {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes pbfStrobe {
+  0% {
+    opacity: 0.9;
+  }
+  12% {
+    opacity: 0;
+  }
+  24% {
+    opacity: 0.75;
+  }
+  36% {
+    opacity: 0;
+  }
+  48% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes pbfPop {
+  0% {
+    transform: scale(0.2) rotate(-8deg);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.18) rotate(2deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.96) rotate(-1deg);
+  }
+  62% {
+    transform: scale(1.04);
+  }
+  72%,
+  88% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes pbfBoost {
+  0%,
+  20% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1);
+  }
+  70% {
+    transform: scale(1.12);
+  }
+  80%,
+  88% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes pbfRays {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes pbfLegHit {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.14);
+  }
+  45% {
+    transform: scale(0.97);
+  }
+  65% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes pbfStamp {
+  0% {
+    transform: scale(2.2) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.92) rotate(-12deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-12deg);
+    opacity: 1;
+  }
+}
+.pbf-pill.live {
+  animation: pbfLive 900ms ease-in-out infinite;
+}
+.pbf-count-pop {
+  display: inline-block;
+  animation: pbfCount 600ms var(--ease-pop) both;
+}
+.pbf-rise {
+  animation: pbfRise 500ms var(--ease-standard) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ---------- boot: preloader and blocking errors (core/boot/GameBoot) ---------- */
+.boot {
+  min-height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  animation: pbfRise 500ms var(--ease-standard) both;
+}
+.boot-bar {
+  width: 220px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-card-hi);
+  overflow: hidden;
+}
+.boot-bar span {
+  display: block;
+  height: 100%;
+  background: var(--action-primary);
+  transform-origin: left;
+  transition: transform 0.3s var(--ease-standard);
+}
+.boot .pbf-btn {
+  min-width: 180px;
+  text-align: center;
+  text-decoration: none;
+}
