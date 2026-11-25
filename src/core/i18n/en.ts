@@ -21,6 +21,10 @@ const en = {
   'common.error.INSUFFICIENT_BALANCE': 'Not enough balance for that stake.',
   'common.error.INVALID_STAKE': 'That stake is not allowed.',
   'common.display.error': 'Display error ({kind}).',
+  'common.boot.network.title': 'Connection problem',
+  'common.boot.network.body': 'We could not reach the game server. Check your connection and try again.',
+  'common.boot.runtime.title': 'Something went wrong',
+  'common.boot.runtime.body': 'The game stopped unexpectedly. Please reload the game.',
 } as const;
 
 export default en;

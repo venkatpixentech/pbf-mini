@@ -2,7 +2,7 @@
 // Not covered: reconnect. No game has a socket or reconnect logic yet (docs/09-BACKEND-INTEGRATION.md).
 import { test } from '@playwright/test';
 
-import { dismissIntro, expect, openGame, pageText } from './helpers';
+import { dismissIntro, expect, GAMES, openGame, pageText } from './helpers';
 
 test('critical asset fails: "Unable to load" instead of a stuck loader (Higher or Lower)', async ({ page }) => {
   await page.route('**/higherlower/assets/higherlower/images/badges.json*', (route) => route.fulfill({ status: 500 }));
@@ -39,3 +39,21 @@ test('session error: the maintenance screen is shown and no canvas is created', 
   await expect(page.getByText('Under maintenance')).toBeVisible({ timeout: 15_000 });
   expect(await page.locator('canvas').count()).toBe(0);
 });
+
+// A currency code Intl cannot format (?currency=COINS reaches the mock session) makes the screen throw while
+// rendering. Before the error boundary this unmounted everything and left a blank page.
+for (const game of GAMES) {
+  test(`${game.id}: a screen that crashes while rendering shows the runtime error screen, and Reload works`, async ({
+    page,
+  }) => {
+    await page.goto(`/${game.id}/?currency=COINS`);
+    await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('The game stopped unexpectedly. Please reload the game.')).toBeVisible();
+    await expect(page.locator('.boot-overlay')).toHaveCount(0);
+    expect(await page.locator('.pbf-layout').count()).toBe(0);
+    const reloaded = page.waitForEvent('load');
+    await page.getByRole('button', { name: 'Reload' }).click();
+    await reloaded;
+    await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 15_000 });
+  });
+}

@@ -1,14 +1,14 @@
-import { type ComponentType, useEffect, useState } from 'react';
+import { Component, type ComponentType, type ReactNode, useEffect, useState } from 'react';
 
 import type { CoreInit, GameDefinition, GameScreenProps } from 'core/game/defineGame';
 import { initI18n, setLanguage } from 'core/i18n';
 import { useCoreT } from 'core/i18n/react';
-import { ApiError } from 'core/services/apiError';
 import { AppShell } from 'core/ui/AppShell';
 
 import { readLaunchParams } from './launchParams';
-import { LoadError, withTimeout } from './loadQueue';
+import { withTimeout } from './loadQueue';
 import { markStartup, onCriticalScene } from './startup';
+import { sessionFailureCode, startupErrorScreen } from './startupError';
 
 // Fonts the first screen renders with (Pixi text is drawn with whatever font is loaded at that moment).
 const FONTS = ['900 20px Degular', '700 20px Degular', '400 15px "Avenir Next"', '800 15px "Avenir Next"'];
@@ -17,14 +17,24 @@ const INIT_TIMEOUT_MS = 15000;
 const ASSET_TIMEOUT_MS = 15000;
 const SCENE_TIMEOUT_MS = 10000; // safety net if a Pixi game never reports its critical stage
 
-// boot failure code -> the part of the common.boot.<name>.title / .body keys (core/i18n/en.ts)
-const BOOT_ERRORS: Record<string, 'maintenance' | 'sessionExpired' | 'sessionInvalid' | 'timeout' | 'assetsFailed'> = {
-  MAINTENANCE: 'maintenance',
-  SESSION_EXPIRED: 'sessionExpired',
-  SESSION_INVALID: 'sessionInvalid',
-  TIMEOUT: 'timeout',
-  ASSETS_FAILED: 'assetsFailed',
-};
+/**
+ * Catches an error thrown while rendering the game screen (or in its effects) and hands it to GameBoot, which
+ * replaces the screen with the blocking error screen. Without it React unmounts everything and the player is left
+ * with a blank page. Errors in event handlers and async code do not unmount the screen and are not caught here.
+ * React itself logs the caught error to the console.
+ */
+class ScreenBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch() {
+    this.props.onError();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 /** A boot step failed: `code` picks the blocking error screen. */
 class BootFailure extends Error {
@@ -91,8 +101,7 @@ export function GameBoot<Api extends { init(): Promise<Init> }, Init extends Cor
         return init;
       },
       (error: unknown) => {
-        if (error instanceof ApiError) throw new BootFailure(error.code, error);
-        throw new BootFailure(error instanceof LoadError ? 'TIMEOUT' : 'SESSION_INVALID', error);
+        throw new BootFailure(sessionFailureCode(error), error);
       },
     );
 
@@ -211,11 +220,21 @@ export function GameBoot<Api extends { init(): Promise<Init> }, Init extends Cor
     };
   }, [waiting, game]);
 
+  // The screen crashed while rendering (before or after it became playable): show the runtime error screen.
+  const onScreenError = () => {
+    document.documentElement.classList.add('pbf-decorated');
+    setState({ stage: 'error', code: 'RUNTIME' });
+  };
+
   const Screen = state.stage === 'ready' ? state.Screen : null;
-  const errorName = state.stage === 'error' ? (BOOT_ERRORS[state.code] ?? 'sessionInvalid') : null;
+  const errorName = state.stage === 'error' ? startupErrorScreen(state.code) : null;
   return (
     <AppShell>
-      {Screen && state.stage === 'ready' && <Screen api={api} init={state.init} launch={launch} />}
+      {Screen && state.stage === 'ready' && (
+        <ScreenBoundary onError={onScreenError}>
+          <Screen api={api} init={state.init} launch={launch} />
+        </ScreenBoundary>
+      )}
       {(state.stage === 'loading' || waiting) && (
         <div className={waiting ? 'boot boot-overlay' : 'boot'} aria-busy="true">
           <h1 className="pbf-title">{game.title}</h1>

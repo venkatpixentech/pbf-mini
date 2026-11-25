@@ -60,6 +60,8 @@ export function runQueue<T>(
   let done = 0;
   let failed = false;
   return new Promise((resolve, reject) => {
+    // an already-aborted signal never fires 'abort' again, so check it before starting any work
+    if (signal?.aborted) return reject(new LoadError('ABORTED', 'queue'));
     if (!unique.length) return resolve(results);
     const fail = (error: unknown) => {
       if (failed) return;

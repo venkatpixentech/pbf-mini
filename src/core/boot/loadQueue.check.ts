@@ -1,5 +1,7 @@
 // Self-check for the boot load queue: node --experimental-strip-types src/core/boot/loadQueue.check.ts
+import { ApiError } from '../services/apiError.ts';
 import { LoadError, runQueue, withTimeout } from './loadQueue.ts';
+import { sessionFailureCode, startupErrorScreen } from './startupError.ts';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const assert = (ok: boolean, msg: string) => {
@@ -102,5 +104,48 @@ const assert = (ok: boolean, msg: string) => {
 // 7. empty list resolves
 assert((await runQueue([], async () => 1)).size === 0, 'empty');
 
-console.log('loadQueue.check: ok (concurrency, dedupe, progress, retry, timeout, failure, abort)');
+// 8. a signal aborted before the queue starts: nothing is loaded, the queue rejects with ABORTED
+{
+  const ac = new AbortController();
+  ac.abort();
+  let calls = 0;
+  let error: unknown;
+  try {
+    await runQueue(['a', 'b'], async () => void calls++, { signal: ac.signal });
+  } catch (e) {
+    error = e;
+  }
+  assert(error instanceof LoadError && error.code === 'ABORTED', 'pre-aborted queue rejects with ABORTED');
+  assert(calls === 0, `pre-aborted queue started ${calls} loads`);
+}
+
+// 9. startup error classification (startupError.ts): which blocking screen a failed boot shows
+{
+  assert(sessionFailureCode(new ApiError('MAINTENANCE')) === 'MAINTENANCE', 'server code kept');
+  assert(sessionFailureCode(new ApiError('SESSION_EXPIRED')) === 'SESSION_EXPIRED', 'server code kept (expired)');
+  assert(sessionFailureCode(new LoadError('TIMEOUT', 'session')) === 'TIMEOUT', 'timeout');
+  assert(sessionFailureCode(new TypeError('Failed to fetch')) === 'NETWORK', 'fetch failure is a network error');
+  assert(
+    sessionFailureCode(new SyntaxError('Unexpected token <')) === 'NETWORK',
+    'unreadable reply is a network error',
+  );
+  assert(sessionFailureCode('offline') === 'NETWORK', 'non-Error rejection is a network error');
+  const screens: Array<[string, string]> = [
+    ['MAINTENANCE', 'maintenance'],
+    ['SESSION_EXPIRED', 'sessionExpired'],
+    ['SESSION_INVALID', 'sessionInvalid'],
+    ['TIMEOUT', 'timeout'],
+    ['NETWORK', 'network'],
+    ['ASSETS_FAILED', 'assetsFailed'],
+    ['RUNTIME', 'runtime'],
+    ['SOME_UNKNOWN_CODE', 'sessionInvalid'],
+    ['constructor', 'sessionInvalid'],
+  ];
+  for (const [code, screen] of screens)
+    assert(startupErrorScreen(code) === screen, `${code} -> ${startupErrorScreen(code)}, expected ${screen}`);
+}
+
+console.log(
+  'loadQueue.check: ok (concurrency, dedupe, progress, retry, timeout, failure, abort, pre-aborted, startup errors)',
+);
 process.exit(0);
