@@ -57,3 +57,21 @@ for (const game of GAMES) {
     await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 15_000 });
   });
 }
+
+test('WebGL context lost then restored: the canvas redraws and the display error clears (Higher or Lower)', async ({
+  page,
+}) => {
+  await openGame(page, 'higherlower');
+  await dismissIntro(page);
+  const canvas = page.locator('canvas').first();
+  await canvas.evaluate((c: HTMLCanvasElement) => {
+    const gl = c.getContext('webgl2') ?? c.getContext('webgl');
+    const ext = gl?.getExtension('WEBGL_lose_context');
+    (window as unknown as { __lose: WEBGL_lose_context | null | undefined }).__lose = ext;
+    ext?.loseContext();
+  });
+  await expect(page.getByText('Display error (context-lost)')).toBeVisible({ timeout: 5_000 });
+  await page.evaluate(() => (window as unknown as { __lose: WEBGL_lose_context }).__lose.restoreContext());
+  await expect(page.getByText('Display error (context-lost)')).toHaveCount(0, { timeout: 5_000 });
+  expect(await page.locator('canvas').count()).toBe(1);
+});

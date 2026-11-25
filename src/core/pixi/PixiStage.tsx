@@ -1,5 +1,5 @@
 import { Application } from 'pixi.js';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { markStartup, reportCriticalScene } from 'core/boot/startup';
 import { onLanguageChange } from 'core/i18n';
@@ -10,12 +10,17 @@ import { loadStageAssets, unloadStageAssets } from './stageAssets';
 
 export type StageError = { kind: 'init' | 'assets' | 'scene' | 'context-lost'; error?: unknown };
 
+/** How long a lost WebGL context may stay lost before the stage is rebuilt from scratch. */
+const CONTEXT_RESTORE_TIMEOUT_MS = 3000;
+
 type Props<P, E> = {
   scene: SceneFactory<P, E>;
   props: P;
   assets?: StageAsset[];
   onEvent?: (event: E) => void;
   onError?: (error: StageError) => void;
+  /** The WebGL context came back after a `context-lost` error and the stage has redrawn. */
+  onRecovered?: () => void;
   transparent?: boolean;
   paused?: boolean;
   className?: string;
@@ -37,6 +42,7 @@ export function PixiStage<P, E>({
   assets = [],
   onEvent,
   onError,
+  onRecovered,
   transparent,
   paused,
   className,
@@ -44,10 +50,12 @@ export function PixiStage<P, E>({
 }: Props<P, E>) {
   const host = useRef<HTMLDivElement>(null);
   const live = useRef<{ app: Application; scene: PixiScene<P, E> } | null>(null);
+  // Bumped to rebuild the Application when a lost context is not restored in time.
+  const [generation, setGeneration] = useState(0);
   // Latest values without re-running the mount effect.
-  const latest = useRef({ props, onEvent, onError, paused });
+  const latest = useRef({ props, onEvent, onError, onRecovered, paused });
   useLayoutEffect(() => {
-    latest.current = { props, onEvent, onError, paused };
+    latest.current = { props, onEvent, onError, onRecovered, paused };
   });
 
   useLayoutEffect(() => {
@@ -87,12 +95,30 @@ export function PixiStage<P, E>({
 
         el.appendChild(app.canvas);
         const canvas = app.canvas;
+        // Context loss: preventDefault lets the browser restore the context, Pixi rebuilds its GPU resources on
+        // restore, and we redraw and resume. If it is not restored in time the whole stage is rebuilt.
+        let restoreTimer: ReturnType<typeof setTimeout> | undefined;
         const onLost = (e: Event) => {
           e.preventDefault();
+          app.ticker.stop();
           latest.current.onError?.({ kind: 'context-lost' });
+          clearTimeout(restoreTimer);
+          restoreTimer = setTimeout(() => setGeneration((g) => g + 1), CONTEXT_RESTORE_TIMEOUT_MS);
+        };
+        const onRestored = () => {
+          clearTimeout(restoreTimer);
+          instance.resize(app.screen.width, app.screen.height);
+          app.render();
+          if (!document.hidden && !latest.current.paused) app.ticker.start();
+          latest.current.onRecovered?.();
         };
         canvas.addEventListener('webglcontextlost', onLost);
-        disposers.push(() => canvas.removeEventListener('webglcontextlost', onLost));
+        canvas.addEventListener('webglcontextrestored', onRestored);
+        disposers.push(() => {
+          clearTimeout(restoreTimer);
+          canvas.removeEventListener('webglcontextlost', onLost);
+          canvas.removeEventListener('webglcontextrestored', onRestored);
+        });
 
         const onResize = () => instance.resize(app.screen.width, app.screen.height);
         app.renderer.on('resize', onResize);
@@ -117,11 +143,14 @@ export function PixiStage<P, E>({
 
         step = 'scene';
         started.scene = true;
+        const initProps = latest.current.props;
         await instance.init(
           { app, root: app.stage, emit: (e) => latest.current.onEvent?.(e), track: (d) => disposers.push(d) },
-          latest.current.props,
+          initProps,
         );
         if (cancelled) return;
+        // props that changed while the scene was starting were skipped by the update effect (live was not set)
+        if (latest.current.props !== initProps) instance.update(latest.current.props);
         onResize();
         if (critical) {
           markStartup('scene');
@@ -149,7 +178,7 @@ export function PixiStage<P, E>({
     };
     // Rebuilt only when the scene factory changes; props flow through update().
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene]);
+  }, [scene, generation]);
 
   useEffect(() => {
     live.current?.scene.update(props);

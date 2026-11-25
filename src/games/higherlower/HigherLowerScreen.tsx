@@ -161,6 +161,8 @@ export function HigherLowerScreen({ api, init }: GameScreenProps<HigherLowerApi,
     [setMessage],
   );
 
+  const onSceneRecovered = useCallback(() => setMessage(null), [setMessage]);
+
   const betting = phase === 'betting';
   const choose = async (market: MarketId) => {
     if (busy || !betting) return;
@@ -321,6 +323,7 @@ export function HigherLowerScreen({ api, init }: GameScreenProps<HigherLowerApi,
         assets={CARD_REVEAL_ASSETS}
         onEvent={onSceneEvent}
         onError={onSceneError}
+        onRecovered={onSceneRecovered}
         transparent
       />
     </CanvasFrame>

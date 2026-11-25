@@ -177,6 +177,7 @@ export function AccaCrashScreen({ api, init }: GameScreenProps<AccaCrashApi, Ini
   const { secondsLeft } = useCountdown(clock, round.timing.opensAt, round.timing.closesAt);
 
   const onSceneError = useCallback((e: StageError) => setMessage(`Display error (${e.kind}).`), [setMessage]);
+  const onSceneRecovered = useCallback(() => setMessage(null), [setMessage]);
 
   const placeBetAction = async (p: Panel) => {
     if (busy || phase !== 'betting') return;
@@ -371,6 +372,7 @@ export function AccaCrashScreen({ api, init }: GameScreenProps<AccaCrashApi, Ini
                 boost: goals.reduce((sum, g) => (g.mine ? sum + g.boost : sum), 0),
               }}
               onError={onSceneError}
+              onRecovered={onSceneRecovered}
               transparent
             />
             {countdown !== null && (

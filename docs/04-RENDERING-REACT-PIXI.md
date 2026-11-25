@@ -50,7 +50,10 @@ Lifecycle (one Application per mount, nothing shared between mounts):
   `app.queueResize()` when the layout slot changes without a window resize. Same Application, no
   re-initialisation; the scene's `resize(width, height)` runs.
 - Paused when the tab is hidden or when `paused` is set. Scenes must not assume time passes while hidden.
-- WebGL context loss is reported through `onError({ kind: 'context-lost' })`.
+- WebGL context loss: the ticker stops and `onError({ kind: 'context-lost' })` fires. When the browser restores
+  the context the stage redraws, resumes and calls `onRecovered`. If it is not restored within 3 s the stage
+  rebuilds its Application and scene from the latest props.
+- Props that change while the scene is still starting are applied with one `update()` right after `init`.
 - Teardown runs exactly once on every path (normal unmount, unmount during async init under React
   StrictMode, init failure): scene `destroy`, tracked disposers, `app.destroy` with children, asset release.
 - `critical`: after the scene is built the stage draws one frame synchronously and reports ready, which
@@ -94,6 +97,15 @@ Every canvas has a config file (what to draw) and a view (how it moves):
 
 Reference implementations: `src/games/higherlower/scenes/` (card reveal: flip, staged reveal, OVR roll) and
 `src/games/accacrash/scenes/` (crash curve with a pulsing head, labels from config).
+
+Pixi views in the current games (3 views in 2 games; each has its own config):
+
+| Game | View | What it does | File |
+|---|---|---|---|
+| Higher or Lower | Card reveal | Flips the cards and runs the staged reveal (`PixiScene` class, `critical`) | `src/games/higherlower/scenes/CardRevealScene.ts` |
+| Higher or Lower | Win confetti | One burst when a round is won (`usePixiEffect` draw function) | `src/games/higherlower/WinConfetti.tsx` |
+| Acca Crash | Crash curve | Draws the live curve with a pulsing head (`PixiScene` class) | `src/games/accacrash/scenes/CrashCurveScene.ts` |
+| Last Man Standing | none | `renderer: 'dom'`, plain React and CSS | n/a |
 
 ## Verified behaviour
 
