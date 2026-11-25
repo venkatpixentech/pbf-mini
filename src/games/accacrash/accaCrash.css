@@ -1,4 +1,4 @@
-=/* Compact layout (core GameLayout): header + crash history, curve + scorer cards as the stage, the two bet
+/* Compact layout (core GameLayout): header + crash history, curve + scorer cards as the stage, the two bet
    panels side by side as controls; ticker, tiers and other players' bets in the scrolling info. */
 .acca {
   --pbf-play-min: 440px;
