@@ -87,9 +87,17 @@ async function buildDictionaries(lang: string, from: I18nSources) {
   return { base: english, selected: { ...core, ...game } };
 }
 
-/** Languages the sources can serve (plus the pseudo test language). */
+/** The pseudo test language is a development and test tool: production builds never offer or activate it. */
+const pseudoAllowed = (): boolean => (import.meta as { env?: { PROD?: boolean } }).env?.PROD !== true;
+
+/** Languages the sources can serve (plus the pseudo test language outside production). */
 export const availableLanguages = (from: I18nSources = sources): string[] => [
-  ...new Set(['en', PSEUDO_LANGUAGE, ...Object.keys(from.core ?? {}), ...Object.keys(from.game ?? {})]),
+  ...new Set([
+    'en',
+    ...(pseudoAllowed() ? [PSEUDO_LANGUAGE] : []),
+    ...Object.keys(from.core ?? {}),
+    ...Object.keys(from.game ?? {}),
+  ]),
 ];
 
 /** Chooses the language to use for a request: the requested one when available, else English. */

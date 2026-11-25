@@ -40,48 +40,32 @@ test('English by default; unsupported languages fall back to English', async ({ 
   expect(seen.messages).toEqual([]);
 });
 
-test('the language launch parameter selects the language (React text), including the boot screens', async ({
+// The pseudo-language `xx` is a development tool: a production build (what these tests run against) must
+// ignore it, from the query string and from the hash, at launch and live. Its behaviour (React and Pixi text,
+// live switching) is covered in development by the dev-server check and by i18n.check.ts.
+test('the pseudo test language cannot be activated in a production build (query, hash, live switch)', async ({
   page,
 }) => {
-  await openGame(page, 'higherlower', '?lang=xx');
-  expect(await balanceLabel(page)).toMatch(/^\[.*\]$/);
-  await dismissIntro(page);
-  expect(await page.locator('.hol-banner h2').textContent()).toMatch(/\[Hígh.*\]/);
-  const maintenance = await page.context().newPage();
-  await maintenance.goto('/higherlower/?lang=xx&mockInitError=MAINTENANCE');
-  await expect(maintenance.getByText(/^\[Úñdér máíñtéñáñçé/)).toBeVisible({ timeout: 15_000 });
-});
-
-test('switching the language live needs no reload and also relabels Pixi text (Higher or Lower)', async ({ page }) => {
   await page.addInitScript(captureApps);
-  await openGame(page, 'higherlower');
+  await openGame(page, 'higherlower', '?lang=xx');
+  expect(await balanceLabel(page)).toBe('Balance');
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe('en');
   await dismissIntro(page);
-  await page.evaluate(() => ((window as unknown as { __same: number }).__same = 1));
+  expect(await page.locator('.hol-banner h2').textContent()).not.toMatch(/^\[/);
+
+  // hash launch parameter, as PBF passes it: #/home?lang=xx
+  const hashed = await page.context().newPage();
+  await hashed.addInitScript(captureApps);
+  await openGame(hashed, 'higherlower', '#/home?lang=xx');
+  expect(await balanceLabel(hashed)).toBe('Balance');
+
+  // live switch on the running page
+  await page.evaluate(() => (location.hash = '#?lang=xx'));
+  await page.waitForTimeout(500);
   expect(await balanceLabel(page)).toBe('Balance');
   expect((await canvasTexts(page)).some((t) => t.startsWith('['))).toBe(false);
 
-  await page.evaluate(() => (location.hash = '#?lang=xx'));
-  await expect.poll(() => balanceLabel(page)).toMatch(/^\[.*\]$/);
-  expect(await page.evaluate(() => (window as unknown as { __same: number }).__same), 'no reload').toBe(1);
-  expect(
-    (await canvasTexts(page)).some((t) => t.startsWith('[')),
-    'card tier text relabelled in Pixi',
-  ).toBe(true);
-
-  await page.evaluate(() => (location.hash = '#?lang=en'));
-  await expect.poll(() => balanceLabel(page)).toBe('Balance');
-  expect((await canvasTexts(page)).some((t) => t.startsWith('['))).toBe(false);
-});
-
-test('Acca Crash curve labels follow a live language switch (Pixi text from the game dictionary)', async ({ page }) => {
-  await page.addInitScript(captureApps);
-  await openGame(page, 'accacrash');
-  await dismissIntro(page);
-  await expect
-    .poll(async () => (await canvasTexts(page)).some((t) => t.includes('CASH OUT BEFORE IT CRASHES')))
-    .toBe(true);
-  await page.evaluate(() => (location.hash = '#?lang=xx'));
-  await expect
-    .poll(async () => (await canvasTexts(page)).some((t) => t.startsWith('[') && t.includes('ÇÁSH')), { timeout: 5000 })
-    .toBe(true);
+  const maintenance = await page.context().newPage();
+  await maintenance.goto('/higherlower/?lang=xx&mockInitError=MAINTENANCE');
+  await expect(maintenance.getByText(/^Under maintenance/i)).toBeVisible({ timeout: 15_000 });
 });
