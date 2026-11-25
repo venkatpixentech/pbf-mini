@@ -75,3 +75,20 @@ test('WebGL context lost then restored: the canvas redraws and the display error
   await expect(page.getByText('Display error (context-lost)')).toHaveCount(0, { timeout: 5_000 });
   expect(await page.locator('canvas').count()).toBe(1);
 });
+
+test('WebGL context lost and never restored: the stage rebuilds after 3 s and the display error clears (Higher or Lower)', async ({
+  page,
+}) => {
+  await openGame(page, 'higherlower');
+  await dismissIntro(page);
+  await page
+    .locator('canvas')
+    .first()
+    .evaluate((c: HTMLCanvasElement) => {
+      const gl = c.getContext('webgl2') ?? c.getContext('webgl');
+      gl?.getExtension('WEBGL_lose_context')?.loseContext(); // never restored
+    });
+  await expect(page.getByText('Display error (context-lost)')).toBeVisible({ timeout: 2_000 });
+  await expect(page.getByText('Display error (context-lost)')).toHaveCount(0, { timeout: 10_000 });
+  expect(await page.locator('canvas').count()).toBe(1);
+});

@@ -35,8 +35,8 @@ Builds go to `../pbf-game-builds/<id>` (outside the project); each is a static s
 | React + Pixi | One Application per stage, config-driven views, resize without re-init (doc 04) |
 | Assets | Common + per-game folders, content-versioned URLs, WOFF2 fonts, trimmed atlases (doc 07) |
 | Backend | Mock servers implementing typed contracts; no real backend, operator messaging or socket yet (doc 09) |
-| Translations | Not implemented; English is hard-coded (doc 02, requirement 5) |
-| Tests | Type, lint, structure and mock self-checks; browser checks are manual or scripted outside the repo (doc 10) |
+| Translations | Core and game dictionaries with live switching (`src/core/i18n`); English only so far. Acca Crash and Last Man Standing still have hard-coded English text |
+| Tests | Type, lint, structure and mock self-checks, plus Playwright browser tests in `tests/e2e` run against the builds (doc 10) |
 
 ## Documentation
 

@@ -12,6 +12,10 @@ keep them small.
 | `public/assets/common/` | Shared art: `icon/` (stat icons), `images/countryIcons/` (flags) | Copied into every build; addressed with `assetUrl()` |
 | `public/assets/<id>/` | One game's own art (today: `higherlower/images/badges.{json,png}`) | Copied only into that game's build |
 
+**Rule for a new file (two pipelines, by design):** a file referenced from CSS (fonts, backgrounds) goes in
+`src/core/assets`; a file loaded by URL at runtime (React images, Pixi textures) goes in `public/assets/common`
+or `public/assets/<id>`. Both are cache-safe: Vite hashes the first kind, `assetUrl()` adds `?v=` to the second.
+
 `accacrash` and `lastmanstanding` have empty asset folders (kept with `.gitkeep`; `npm run new-game` creates
 one per game). Original art comes from the PBF reference project, copied read-only; the PBF project is never
 edited.

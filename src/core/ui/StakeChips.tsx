@@ -1,5 +1,5 @@
 import { useCoreT } from 'core/i18n/react';
-import { formatMoney } from 'core/services/money';
+import { compareMoney, formatMoney } from 'core/services/money';
 
 type Props = {
   stakes: number[];
@@ -16,7 +16,13 @@ export function StakeChips({ stakes, value, onChange, currency, disabled, label 
   return (
     <div className="stake-chips" role="group" aria-label={label ?? t('common.stake')}>
       {stakes.map((s) => (
-        <button key={s} type="button" aria-pressed={s === value} disabled={disabled} onClick={() => onChange(s)}>
+        <button
+          key={s}
+          type="button"
+          aria-pressed={compareMoney(s, value) === 0}
+          disabled={disabled}
+          onClick={() => onChange(s)}
+        >
           {formatMoney(s, currency)}
         </button>
       ))}

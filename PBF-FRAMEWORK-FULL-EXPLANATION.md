@@ -268,7 +268,7 @@ Currency and monetary calculations:
 
 ### [`RoundEngine.ts`](file:///C:/Users/venka/PBF/pbf-game-framework/src/core/services/RoundEngine.ts)
 Pure state machine for timed client phases:
-- Manages state transitions with optional auto-advancing timeouts (`durationMs`) or manual `advance()`.
+- Holds the current phase and moves to the next one only when the game calls `advance()`. No timers: phase ends come from server time (`core/round`).
 - Safe timer cancellation on `stop()`.
 
 ### [`mockTransport.ts`](file:///C:/Users/venka/PBF/pbf-game-framework/src/core/services/mockTransport.ts)

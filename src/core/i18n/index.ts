@@ -1,4 +1,4 @@
-// Translation store, shared by React text and Pixi text (docs/08-I18N-TRANSLATIONS.md).
+// Translation store, shared by React text and Pixi text.
 //   - one language per page, chosen from the launch parameter (lang / language), English fallback
 //   - a shared dictionary (core) plus an independent dictionary per game, loaded for the selected language only
 //   - live switching: setLanguage() loads the dictionaries, swaps them and notifies subscribers (React hooks,

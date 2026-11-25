@@ -92,9 +92,6 @@ body {
   min-height: 100vh;
   color: var(--text-primary);
   font: 400 15px/1.45 var(--font-body);
-  background:
-    radial-gradient(120% 60% at 50% 0%, #3a1a66 0%, transparent 60%),
-    linear-gradient(180deg, #24123d 0%, var(--surface-app) 55%, #120a1f 100%) fixed;
 }
 button {
   font: inherit;

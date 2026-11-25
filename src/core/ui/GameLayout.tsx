@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useCoreT } from 'core/i18n/react';
 
 type Props = {
   /** Game root class (e.g. 'hol'); game CSS hangs off it. */
@@ -29,15 +30,8 @@ type Props = {
  * Games set --pbf-play-min / --pbf-play-share and lay out their own stage and controls inside the slots.
  * See styles.css "game layout" and docs/06-RESPONSIVE-GAME-LAYOUT.md.
  */
-export function GameLayout({
-  className,
-  header,
-  stage,
-  controls,
-  info,
-  infoLabel = 'Game information',
-  overlays,
-}: Props) {
+export function GameLayout({ className, header, stage, controls, info, infoLabel, overlays }: Props) {
+  const t = useCoreT();
   return (
     <main className={`pbf-layout${className ? ` ${className}` : ''}`}>
       <section className="pbf-play">
@@ -46,7 +40,7 @@ export function GameLayout({
         {controls && <div className="pbf-play-controls">{controls}</div>}
       </section>
       {info && (
-        <section className="pbf-info" aria-label={infoLabel}>
+        <section className="pbf-info" aria-label={infoLabel ?? t('common.info')}>
           {info}
         </section>
       )}

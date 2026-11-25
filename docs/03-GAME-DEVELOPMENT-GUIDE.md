@@ -83,7 +83,7 @@ The core handles launch params, the loading lifecycle (session, fonts, screen co
 - Build every screen on `GameLayout` (`core/ui/GameLayout`): `header`, `stage`, `controls` fit in about half the mobile height and never scroll; rules, history and feeds go in `info`. Set `--pbf-play-min` in the game CSS; use `CanvasFrame fill` for canvases. See [06-RESPONSIVE-GAME-LAYOUT.md](06-RESPONSIVE-GAME-LAYOUT.md).
 
 
-- Start from `GameHeader`, `StakeChips`, `useRoundEngine` (timed phases), `useApiMessage` (error code to copy) from `src/core`.
+- Start from `GameHeader`, `StakeChips`, `useRoundEngine` (phase sequence; time phases with `useAtServerTime` / `useCountdown` from `core/round`), `useApiMessage` (error code to copy) from `src/core`.
 - Reuse the `pbf-*` classes (`pbf-btn`, `pbf-card`, `pbf-pill`, `pbf-caption`) and tokens before writing new CSS.
 - Multi-screen games keep a stack of screens in React state. Do not add a router.
 - Money display always goes through `formatMoney`.

@@ -17,6 +17,7 @@ function gameEntry(id: string | undefined) {
   return `${src}/games/${id}/index.ts`;
 }
 
+// Owner: Portion 6 (assets).
 /** Build only: ship public/assets/common plus this game's own public/assets/<id>, never other games' art. */
 function gameAssets(id: string | undefined): Plugin {
   let outDir = '';
@@ -57,6 +58,7 @@ const PIXI_RENDERER_CHUNKS = /^(WebGLRenderer|SharedSystems|colorToUniform|brows
 // The fonts the first screen renders with (GameBoot FONTS); Demi loads on first use.
 const CRITICAL_FONTS = /^(Degular-Black|Degular-Bold|AvenirNextLTPro-Regular|AvenirNextLTPro-Bold)-.*\.woff2$/;
 
+// Owner: Portion 2 (boot).
 /**
  * Startup hints in index.html. Without them the browser only discovers the screen code, Pixi and the fonts
  * after the boot script has downloaded and run, one round trip after another. With them every critical file
@@ -67,7 +69,8 @@ const CRITICAL_FONTS = /^(Degular-Black|Degular-Bold|AvenirNextLTPro-Regular|Ave
  */
 function startupHints(id: string | undefined): Plugin {
   const def = id ? readFileSync(gameEntry(id), 'utf8') : '';
-  const title = /title:\s*'([^']+)'/.exec(def)?.[1] ?? id ?? 'PBF';
+  const title = id ? /title:\s*'([^']+)'/.exec(def)?.[1] : 'PBF';
+  if (!title) throw new Error(`${gameEntry(id)}: write the title as text, e.g. title: 'My Game'`);
   const pixiGame = /renderer:\s*'pixi'/.test(def);
   const gameDir = `/src/games/${id}/`;
   return {

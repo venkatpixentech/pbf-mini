@@ -3,8 +3,10 @@
 How the framework is stabilised: nine portions, each inspected, scoped, implemented, validated, documented and
 then **FROZEN**. A frozen portion is protected from later work (see "Frozen portion policy" below).
 
-Last updated: 2026-11-25. Nothing has been implemented under this roadmap yet; this revision records the
-baseline, the portion boundaries and the overlaps to resolve.
+Last updated: 2026-11-25. All 16 issues from the first review are fixed or decided. Portions 1 to 6 are in
+VALIDATION; none is frozen yet. Last full run: typecheck, `npm run check` and builds pass; browser suite 33 of 36
+(the 3 known Portion 2 crash tests, see Portion 2); whole-repo lint fails only on Windows line endings in
+`src/games/accacrash/AccaCrashScreen.tsx` and `src/games/higherlower/HigherLowerScreen.tsx`.
 
 Allowed statuses: `PENDING`, `IN_PROGRESS`, `VALIDATION`, `FROZEN`, `BLOCKED`.
 
@@ -12,12 +14,12 @@ Allowed statuses: `PENDING`, `IN_PROGRESS`, `VALIDATION`, `FROZEN`, `BLOCKED`.
 
 | # | Portion | Status | Proposed freeze order | Depends on (imports today) |
 |---|---|---|---|---|
-| 1 | Foundation and game isolation | PENDING | 1st | none (type-only references to 2, 4, 6: overlap O4) |
-| 2 | Boot and loading system | PENDING | 4th | 1, 3 (`AppShell`), 6 (i18n, `assetUrl`) |
-| 3 | Shared UI and responsive layout | PENDING | 3rd | 1 (`money`), 6 (`useCoreT`) |
-| 4 | PixiJS rendering engine | PENDING | 5th | 2 (`startup`, `loadQueue`, `registerAsset`), 6 (`translate`, `onLanguageChange`) |
-| 5 | Round lifecycle and server timing | PENDING | 6th | none in core |
-| 6 | Internationalization and asset management | PENDING | 2nd | 1 (`setMoneyLocale`, `ApiError`) |
+| 1 | Foundation and game isolation | VALIDATION (isolation guard, vite.config ownership and title check, money fixes done) | 1st | none (type-only references to 2, 4, 6: overlap O4) |
+| 2 | Boot and loading system | VALIDATION (cannot freeze: 3 known failing crash tests) | 4th | 1, 3 (`AppShell`), 6 (i18n, `assetUrl`) |
+| 3 | Shared UI and responsive layout | VALIDATION (ready to freeze) | 3rd | 1 (`money`), 6 (`useCoreT`) |
+| 4 | PixiJS rendering engine | VALIDATION (props race and context loss fixed) | 5th | 2 (`startup`, `loadQueue`, `registerAsset`), 6 (`translate`, `onLanguageChange`) |
+| 5 | Round lifecycle and server timing | VALIDATION (device-clock timing removed, stale callback fixed) | 6th | none in core |
+| 6 | Internationalization and asset management | VALIDATION (pseudo-language blocked in production; asset decisions recorded) | 2nd | 1 (`setMoneyLocale`, `ApiError`) |
 | 7 | Game-specific architecture and backend integrations | PENDING | 7th | 1 to 6 |
 | 8 | Testing and developer experience | PENDING | 8th | 1 to 7 |
 | 9 | Production readiness | PENDING | 9th | everything |
@@ -47,7 +49,9 @@ Baseline issues that affect freezing:
   frozen files. Recommendation: commit a baseline before each freeze and record the commit here (commits are
   made by the team, not during portion work).
 - **B3.** `src/core/game/defineGame.ts`, `src/core/i18n/*.ts` and `src/games/accacrash/i18n/en.ts` link to
-  `docs/08-I18N-TRANSLATIONS.md`, which does not exist. `docs/00-PBF-OVERVIEW.md` still says translations
+  `docs/08-I18N-TRANSLATIONS.md`, which does not exist. **Partly resolved 2026-11-25:** the three core links now
+  point at `src/core/i18n/index.ts`; the Acca Crash link is left (game file, needs approval).
+  `docs/00-PBF-OVERVIEW.md` still says translations
   are not implemented and browser tests are outside the repo; both are now out of date.
 - **B4.** `../pbf-game-builds` still holds old hyphenated builds (`acca-crash`, `higher-lower`,
   `last-man-standing`, `ultimate-soccer`) next to the current ones. Outside the repo; not touched.
@@ -113,14 +117,14 @@ Each needs a decision before the portion that owns it is frozen. "Proposed" is t
 | O4 | `GameDefinition` (1) references `LaunchParams` (2), `StageAsset` (4) and `DictionaryLoader` (6). Freezing the contract freezes those three types too. | 1, 2, 4, 6 | Treat the three types as part of Portion 1's frozen contract ("pinned types"), while their files stay owned by 2, 4 and 6. |
 | O5 | Boot and Pixi import each other: `GameBoot` dynamically imports `pixi/preload` and `pixi/warmup`; `PixiStage` imports `boot/startup`; `pixi/preload` imports `boot/loadQueue` and `boot/assetUrl`. | 2, 4 | Assign `pixi/preload.ts` and `pixi/warmup.ts` to Portion 2 (they exist for the boot sequence and are only loaded by it). Then 4 depends on 2, never the reverse. |
 | O6 | `boot/assetUrl.ts` is asset management in the boot folder. | 2, 6 | Owned by 6, no move. |
-| O7 | Two round mechanisms used together by Higher or Lower and Acca Crash: `services/RoundEngine.ts` + `hooks/useRoundEngine.ts` (client timers that auto-advance phases) and `core/round/*` (server clock: "nothing a browser timer does can open, close or settle a round"). Their responsibilities are not written down. | 5, 7 | Both owned by 5. First step of Portion 5: define the boundary (likely RoundEngine = client presentation sequencing only, `round/*` = server-authoritative timing). Decision for approval in Portion 5, not now. |
+| O7 | Two round mechanisms used together by Higher or Lower and Acca Crash: `services/RoundEngine.ts` + `hooks/useRoundEngine.ts` (client timers that auto-advance phases) and `core/round/*` (server clock: "nothing a browser timer does can open, close or settle a round"). Their responsibilities are not written down. | 5, 7 | Both owned by 5. First step of Portion 5: define the boundary (likely RoundEngine = client presentation sequencing only, `round/*` = server-authoritative timing). Decision for approval in Portion 5, not now. **Resolved 2026-11-25:** the unused device-clock timing (`durationMs`, `phaseEndsAt`, the countdown in `useRoundEngine`) was removed; `RoundEngine` only sequences phases, all timing comes from `core/round`. |
 | O8 | `services/services.check.ts` tests both `money` (1) and `RoundEngine` (5). | 1, 5 | During Portion 1, keep the money assertions there and move the RoundEngine assertions to a Portion 5 check, unchanged. Fallback: co-owned file. |
 | O9 | Mock support lives in three places: `services/mockTransport.ts` (incl. `mockInitError`), `round/mockClock.ts`, and each game's `api/mockServer.ts`. | 5, 7 | `mockTransport.ts`: 7 (shared mock utility, never imported by a real backend). `mockClock.ts`: 5 (exercises clock sync). Game mocks: each game (7). |
 | O10 | `services/apiError.ts` defines `SessionErrorCode` (`MAINTENANCE`, `SESSION_EXPIRED`, `SESSION_INVALID`), a backend vocabulary in core, used by the boot. | 1, 2, 7 | Owned by 1 as a primitive. Only valid if these codes are PBF platform facts (doc 09); confirm the source before freezing, do not extend it with invented codes. |
 | O11 | `hooks/useApiMessage.ts` turns game error codes into translated text. | 6, 7 | Owned by 6 (it is translation of codes; it has no game rules). |
 | O12 | `src/styles.css` holds `@font-face` (6), tokens and app frame and layout CSS (3), boot loader CSS (2). Tokens are also copied by hand into `pixi/theme.ts` (4) and the inline loader in `index.html` (2). | 2, 3, 4, 6 | Owned by 3. `@font-face` block owned by 6. Token duplication recorded as a known limitation; any token change must update all three. |
-| O13 | Two asset pipelines: fonts and `desktopBg.png` are bundled by Vite from `src/core/assets` (hashed file names); everything else is copied from `public/assets` with `?v=` hashes. Doc 02 still describes fonts in `public`. | 6 | Decide and document one rule in Portion 6. |
-| O14 | Shared common-asset path (`COMMON_BASE`, doc 02 gap) is a production concern (9) but changes `assetUrl` and the asset build plugin (6). | 6, 9 | Decide the mechanism in Portion 6 (even if off by default), so Portion 9 only configures it. Otherwise 9 must reopen 6. |
+| O13 | Two asset pipelines: fonts and `desktopBg.png` are bundled by Vite from `src/core/assets` (hashed file names); everything else is copied from `public/assets` with `?v=` hashes. Doc 02 still describes fonts in `public`. | 6 | Decide and document one rule in Portion 6. **Resolved 2026-11-25:** kept by design; the rule for where a new file goes is in doc 07. No code change. |
+| O14 | Shared common-asset path (`COMMON_BASE`, doc 02 gap) is a production concern (9) but changes `assetUrl` and the asset build plugin (6). | 6, 9 | Decide the mechanism in Portion 6 (even if off by default), so Portion 9 only configures it. Otherwise 9 must reopen 6. **Decided 2026-11-25: not now.** Each game stays self-contained. A shared path depends on how the games are hosted (domain, shared path, caching rules), so it moves to Portion 9 as a hosting decision. Cost of waiting: about 334 KB (common images 178 KB, fonts 156 KB) plus React downloaded again per additional game, first visit only. |
 | O15 | `GameBoot` renders `ui/AppShell` (3), so with numeric freeze order Boot (2) would freeze before the frame it uses. | 2, 3 | Freeze order 3 before 2. |
 | O16 | `core/i18n/en.ts` holds strings for boot (2), UI (3) and session errors (7). | 2, 3, 6, 7 | Owned by 6; new keys append-only (E1). |
 | O17 | Testing (8) cannot own all tests: every portion must pass its own tests before it freezes. | all | Each portion owns its self-checks and e2e specs (mapping below). Portion 8 owns the harness: `playwright.config.ts`, `scripts/serve-builds.mjs`, `tests/e2e/helpers.ts`, `tests/tsconfig.json`, `scripts/new-game.mjs`, lint and format config. |
@@ -184,6 +188,10 @@ Each needs a decision before the portion that owns it is frozen. "Proposed" is t
   `pbf:playable` from a subfolder build with a clean console; loading times not worse than doc 05 under the
   same throttling; a `dom` game requests no Pixi file.
 - **Known limitations:** loading measured on desktop Chrome with throttling only; no real devices.
+- **Known failing tests (decision 2026-11-25):** the 3 tests "a screen that crashes while rendering shows the
+  runtime error screen" in `tests/e2e/failures.spec.ts` fail on purpose. They used `?currency=COINS` to crash the
+  screen; since the Portion 1 money fix, `formatMoney` shows unknown codes as text, so nothing crashes. They stay
+  failing until a test-only way to crash the screen exists. Not a regression. Portion 2 cannot freeze until resolved.
 - **Freeze date:** not frozen.
 - **Reopening history:** none.
 

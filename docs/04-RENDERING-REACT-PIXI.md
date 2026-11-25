@@ -52,7 +52,8 @@ Lifecycle (one Application per mount, nothing shared between mounts):
 - Paused when the tab is hidden or when `paused` is set. Scenes must not assume time passes while hidden.
 - WebGL context loss: the ticker stops and `onError({ kind: 'context-lost' })` fires. When the browser restores
   the context the stage redraws, resumes and calls `onRecovered`. If it is not restored within 3 s the stage
-  rebuilds its Application and scene from the latest props.
+  rebuilds its Application and scene from the latest props, and calls `onRecovered` once the rebuilt scene has
+  initialised, so a screen can clear its "display error" message on either path.
 - Props that change while the scene is still starting are applied with one `update()` right after `init`.
 - Teardown runs exactly once on every path (normal unmount, unmount during async init under React
   StrictMode, init failure): scene `destroy`, tracked disposers, `app.destroy` with children, asset release.

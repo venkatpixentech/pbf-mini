@@ -1,7 +1,7 @@
 // React helpers for server-timed rounds. Everything here is DISPLAY: it re-renders on a timer so countdowns and
 // "betting is open" indicators follow server time. It never changes round state or sends a request: the server
 // enforces deadlines and decides outcomes.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { createServerClock, type ServerClock } from './serverClock.ts';
 
@@ -37,19 +37,22 @@ export function useCountdown(clock: ServerClock, startsAt: number | null, endsAt
 /**
  * Calls `onReach` once when server time reaches `deadline`, scheduled from the server clock estimate (and
  * rescheduled if the estimate moves). This only moves the UI on; the server has already enforced the deadline.
+ * `onReach` is always the one from the latest render, so it sees current state when the deadline is reached.
  */
 export function useAtServerTime(clock: ServerClock, deadline: number | null, onReach: () => void) {
+  const latest = useRef(onReach);
+  useEffect(() => {
+    latest.current = onReach;
+  });
   useEffect(() => {
     if (deadline === null) return;
     let id: ReturnType<typeof setTimeout>;
     const schedule = () => {
       const remaining = clock.remainingMs(deadline);
-      if (remaining <= 0) return onReach();
+      if (remaining <= 0) return latest.current();
       id = setTimeout(schedule, Math.min(remaining, 500)); // re-check often so a clock correction is picked up
     };
     schedule();
     return () => clearTimeout(id);
-    // onReach is intentionally not a dependency: it is the latest closure at the time the deadline is reached
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clock, deadline]);
 }

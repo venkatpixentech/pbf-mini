@@ -19,7 +19,7 @@ type Props<P, E> = {
   assets?: StageAsset[];
   onEvent?: (event: E) => void;
   onError?: (error: StageError) => void;
-  /** The WebGL context came back after a `context-lost` error and the stage has redrawn. */
+  /** After a `context-lost` error the stage is usable again: the context came back and was redrawn, or the stage was rebuilt. */
   onRecovered?: () => void;
   transparent?: boolean;
   paused?: boolean;
@@ -160,6 +160,8 @@ export function PixiStage<P, E>({
         }
         if (latest.current.paused) app.ticker.stop();
         live.current = { app, scene: instance };
+        // A rebuilt stage (generation > 0) replaces a lost context that never came back: tell the screen it recovered.
+        if (generation > 0) latest.current.onRecovered?.();
       } catch (error) {
         if (!cancelled) {
           if (critical) reportCriticalScene(false); // never leave the boot overlay up on a failed stage

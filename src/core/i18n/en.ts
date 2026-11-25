@@ -1,9 +1,10 @@
 // Shared English dictionary: text every game shows (boot screens, balance, stake, common errors).
-// Keys are flat and prefixed `common.`; a game's own dictionary uses its own prefix (docs/08-I18N-TRANSLATIONS.md).
+// Keys are flat and prefixed `common.`; a game's own dictionary uses its own prefix (how translations work: src/core/i18n/index.ts).
 // `{name}` marks a value filled in at run time. English is the fallback for every other language.
 const en = {
   'common.balance': 'Balance',
   'common.stake': 'Stake',
+  'common.info': 'Game information',
   'common.reload': 'Reload',
   'common.lobby': 'Lobby',
   'common.loading': 'Loading {percent}%',

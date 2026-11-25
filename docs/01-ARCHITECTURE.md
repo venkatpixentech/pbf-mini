@@ -54,7 +54,7 @@ pbf-game-framework/
       assets/                fonts (WOFF2), desktop background (hashed by Vite)
       boot/                  GameBoot, launchParams, startup marks, loadQueue (+ check), assetUrl
       game/defineGame.ts     the game contract
-      hooks/                 useRoundEngine (timed phases), useApiMessage (error code to copy)
+      hooks/                 useRoundEngine (phase sequence; timing comes from server time), useApiMessage (error code to copy)
       pixi/                  PixiStage, scene contract, CanvasFrame, viewConfig (+ check), buildView,
                              theme, usePixiEffect, stageAssets, preload, warmup
       services/              RoundEngine, ApiError, money, mockTransport (MOCK), services.check

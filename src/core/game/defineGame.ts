@@ -19,7 +19,7 @@ export type GameDefinition<Api extends { init(): Promise<Init> }, Init extends C
    */
   renderer: 'pixi' | 'dom';
   /**
-   * The game's own translation dictionaries, one dynamic import per language (docs/08-I18N-TRANSLATIONS.md):
+   * The game's own translation dictionaries, one dynamic import per language (how translations work: src/core/i18n/index.ts):
    * `{ en: () => import('./i18n/en') }`. Must include `en`, the fallback. Only the selected language is loaded.
    */
   translations?: { en: DictionaryLoader } & Record<string, DictionaryLoader>;
