@@ -324,6 +324,10 @@ body {
   grid-row: 1;
   min-width: 0;
 }
+/* header rows may shrink to the frame (a game can lay its header out as a grid or flex) */
+.pbf-play-head > * {
+  min-width: 0;
+}
 .pbf-play-stage {
   grid-row: 2;
   position: relative;
@@ -378,6 +382,40 @@ body {
 .pbf-play-head .pbf-balance {
   padding: 3px 10px;
   font-size: 15px;
+}
+/* Small frames (narrow embeds, tiny windows), for every game: the header stays on one line (a long title is cut
+   with an ellipsis, the balance always shows) and the stake chips fit their row. Games add their own rules. */
+@container pbf-frame (max-width: 260px) {
+  .pbf-play {
+    padding: 4px 8px 6px;
+    gap: 4px;
+  }
+  .pbf-play-head .pbf-header > :first-child {
+    min-width: 0;
+  }
+  .pbf-play-head .pbf-title {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pbf-play-head .pbf-eyebrow,
+  .pbf-play-head .pbf-balance small {
+    display: none;
+  }
+  .pbf-play-head .pbf-balance {
+    flex: none;
+    padding: 2px 8px;
+    font-size: 13px;
+  }
+  .pbf-play-controls .stake-chips {
+    gap: 3px;
+  }
+  .pbf-play-controls .stake-chips button {
+    min-height: 28px;
+    padding: 4px 1px;
+    font-size: 10px;
+  }
 }
 @container pbf-frame (max-height: 640px) {
   .pbf-play-head .pbf-eyebrow {

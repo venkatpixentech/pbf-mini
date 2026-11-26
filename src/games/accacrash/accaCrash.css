@@ -529,6 +529,10 @@
 .acca-splash .pbf-btn {
   width: 100%;
   margin-top: auto;
+  /* always on screen: when the intro is taller than the frame, the rest scrolls behind the button */
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
 }
 
 /* ---------- keyframes (copied from the prototype; used only by this game) ---------- */
@@ -680,5 +684,119 @@
   }
   100% {
     transform: scale(1);
+  }
+}
+
+/* Small frames (narrow embeds, tiny windows): the shared header compacts itself (styles.css); here the title pills
+   go (the stage glow shows a live round) and both bet panels stay side by side with every control on screen. */
+@container pbf-frame (max-width: 260px) {
+  .acca .pbf-title .pbf-pill {
+    display: none;
+  }
+  .acca-card-flag {
+    display: none;
+  }
+  .acca-card b {
+    max-width: 100%;
+  }
+  .acca-panels {
+    gap: 4px;
+  }
+  .acca-panel {
+    gap: 4px;
+    padding: 4px;
+  }
+  .acca-auto {
+    min-height: 20px;
+  }
+  .acca-switch {
+    gap: 0;
+    font-size: 0; /* "Auto" stays in the label for screen readers; the switch shows the state */
+  }
+  .acca-auto select {
+    font-size: 11px;
+    padding: 2px 3px;
+  }
+  .acca-stepper {
+    grid-template-columns: 18px minmax(0, 1fr) 18px;
+    gap: 1px;
+    padding: 2px 1px;
+  }
+  .acca-stepper button {
+    height: 18px;
+    font-size: 13px;
+  }
+  .acca-stepper b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+  }
+  .acca-panel .pbf-btn {
+    min-height: 34px;
+    padding: 5px 2px;
+    font-size: 12px;
+    white-space: normal;
+  }
+  .acca-result {
+    min-height: 34px;
+    font-size: 11px;
+  }
+  /* intro */
+  .acca-splash {
+    gap: 8px;
+    padding: 12px 8px 8px;
+  }
+  .acca-splash-title {
+    font-size: 34px;
+  }
+  .acca-splash-badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .acca-splash-preview strong {
+    font-size: 28px;
+  }
+  .acca-splash-cards {
+    width: 100%;
+    justify-content: center;
+  }
+  .acca-splash-cards .acca-card {
+    width: auto;
+    flex: 0 1 72px;
+    min-width: 0;
+  }
+  .acca-splash-steps li {
+    padding: 6px 8px;
+  }
+  .acca-splash-steps span {
+    font-size: 11px;
+  }
+}
+/* Short frames: the crash history is left out (it is history, not play) and the scorer cards shrink to name and
+   boost, so the curve keeps a usable height. */
+@container pbf-frame (orientation: portrait) and (max-height: 420px) {
+  .acca-history {
+    display: none;
+  }
+  .acca-cards {
+    gap: 4px;
+  }
+  .acca-card {
+    padding: 2px 3px 3px;
+  }
+  .acca-card small {
+    display: none;
+  }
+  .acca-card b {
+    font-size: 11px;
+  }
+  .acca-card span {
+    padding: 1px 6px;
+    font-size: 10px;
+  }
+  /* the intro's decorative preview is left out so the how-to-play steps get the room */
+  .acca-splash-preview {
+    display: none;
   }
 }

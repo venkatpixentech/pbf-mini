@@ -380,3 +380,50 @@
     opacity: 1;
   }
 }
+
+/* Small frames (narrow embeds, tiny windows): the shared header and stake chips compact themselves (styles.css);
+   here the market buttons tighten so all six stay on screen. */
+@container pbf-frame (max-width: 260px) {
+  .hol-markets {
+    gap: 4px;
+  }
+  .hol-markets button {
+    min-height: 36px;
+    padding: 4px 2px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .hol-markets b {
+    font-size: 13px;
+  }
+}
+/* Short frames: the banner keeps the question and the countdown (its detail line is left out) and the market
+   buttons get shorter, so the cards keep a usable height. */
+@container pbf-frame (orientation: portrait) and (max-height: 420px) {
+  .hol .pbf-play-head {
+    gap: 4px;
+  }
+  .hol-banner {
+    padding: 4px 8px 5px;
+  }
+  .hol-banner p {
+    display: none;
+  }
+  .hol-banner h2 {
+    font-size: 13px;
+  }
+  .hol-banner h2 em {
+    font-size: 16px;
+  }
+  .hol-count {
+    font-size: 22px;
+  }
+  .hol-markets button {
+    min-height: 34px;
+    padding: 3px 2px;
+    gap: 1px;
+  }
+  .hol-markets b {
+    font-size: 13px;
+  }
+}

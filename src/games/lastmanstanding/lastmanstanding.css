@@ -1075,3 +1075,78 @@
   padding: 10px 12px;
   border-top: 0;
 }
+
+/* Small frames (narrow embeds, tiny windows): the shared header and stake chips compact themselves (styles.css).
+   Setup: one option per row. Fixtures: each team stacks badge, name and tag, and the ATT/DEF/CRE comparison moves
+   to its own line under the two teams instead of squeezing between them. */
+@container pbf-frame (max-width: 260px) {
+  .lms-options {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .lms-opt {
+    flex-flow: row wrap;
+    align-items: baseline;
+    column-gap: 6px;
+    padding: 6px 8px;
+  }
+  .lms-opt small {
+    display: none;
+  }
+  .lms-opt b {
+    font-size: 13px;
+  }
+  .lms-opt .tp {
+    font-size: 11px;
+  }
+  .lms-mc-top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lms-cmp {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(9, auto);
+    justify-content: center;
+    column-gap: 3px;
+    font-size: 10px;
+  }
+  .lms-pick,
+  .lms-pick.away {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 3px;
+    min-height: 0;
+    padding: 6px 4px;
+    text-align: center;
+  }
+  .lms-pick .lms-ovr,
+  .lms-pick .nm,
+  .lms-pick .tag,
+  .lms-pick.away .lms-ovr,
+  .lms-pick.away .nm,
+  .lms-pick.away .tag {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: center;
+  }
+  .lms-pick .nm {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  .lms-play .lms-pick {
+    min-height: 0;
+  }
+  /* match board: the score box shrinks and team names may wrap, so both teams stay inside the stage */
+  .lms-match .board {
+    gap: 4px;
+  }
+  .lms-match .board .t {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  .lms-matchview .lms-match .score {
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: 24px;
+  }
+}
