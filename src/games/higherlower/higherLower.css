@@ -358,13 +358,6 @@
   color: var(--text-secondary);
 }
 
-.hol-confetti {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
 /* ---------- keyframes (copied from the prototype; used only by this game) ---------- */
 @keyframes pbfStamp {
   0% {

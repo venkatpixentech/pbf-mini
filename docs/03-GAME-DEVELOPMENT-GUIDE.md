@@ -1,6 +1,6 @@
 # 03. Game development guide
 
-How to add a game to this framework, and what must be true before it is done. Architecture background: [01-ARCHITECTURE.md](01-ARCHITECTURE.md). Reference games: `higherlower` (single screen, one Pixi scene), `accacrash` (single screen, curve scene), `lastmanstanding` (multi-view React game, no Pixi scene, server-owned fixture list and prize ladder).
+How to add a game to this framework, and what must be true before it is done. Architecture background: [01-ARCHITECTURE.md](01-ARCHITECTURE.md). Reference games: `higherlower` (single screen, one Pixi scene), `accacrash` (single screen, curve scene), `lastmanstanding` (multi-view React game, no Pixi scene, server-owned fixture list and prize ladder), `cardpick` (made with `new-game --scene --sound`: a tappable Pixi scene, a keyboard twin for every canvas action, sound).
 
 ## Rules
 
@@ -21,6 +21,16 @@ npm run check
 
 `new-game` creates the whole folder below with a working placeholder game (mock backend, self-check, screen, styles), registers the self-check in `package.json` and formats the files. The placeholder passes every check and builds as is, so you start green and replace the placeholder `play()` rules and screen with the real game. It refuses an id that already exists or is not lowercase letters and digits only.
 
+Two optional flags add the parts a game may need (pass them after `--` with npm: `npm run new-game cardpick "Card Pick" -- --scene --sound`):
+
+| Flag | Adds | Result |
+|---|---|---|
+| (none) | React only | no Pixi, no audio |
+| `--scene` | `pixi/config/game.config.ts` (preload, design size, canvas share, elements), `pixi/config/config.check.ts`, `pixi/view/<Name>Scene.ts`; the screen draws it in a `<PixiStage critical>` and `renderer` becomes `'pixi'` | Pixi loads with the screen, never in the boot |
+| `--sound` | `sound/sound.config.ts`, `sound/sound.check.ts` (valid config and every named file exists as mp3 and ogg), `public/assets/<id>/sounds/{mp3,ogg}/`; the screen calls `useSound` and shows a React mute button | the audio code loads with the screen, never in the boot; works with or without `--scene` |
+
+`npm run verify-scaffold` proves the workflow on a clean copy of the project (`npm ci` in a temp folder, the four variants scaffolded, checked, type-checked, linted, built, and asserted to load Pixi and audio only where they are used; `-- --fast` reuses this workspace's `node_modules` for a quick run).
+
 ## Folder layout
 
 ```
@@ -33,7 +43,8 @@ src/games/<id>/
     mockServer.ts           MOCK backend that implements the Api
     mockData.ts             synthetic data (never real player names or user data)
     mockServer.check.ts     self-check of the mock backend rules (run by `npm run check`)
-  scenes/                   optional: Pixi views, one <name>.config.ts (all layout, styling, timings, assets, canvas portion) plus one <Name>Scene.ts view per canvas
+  sound/                    optional (`--sound`): sound.config.ts (the SoundGameConfig) and its self-check; the files are in public/assets/<id>/sounds/
+  pixi/                     optional (`--scene`), all Pixi code: view/ holds one <Name>Scene.ts (or effect) per canvas, config/ holds one <name>.config.ts per canvas (all layout, styling, timings, assets, canvas portion) plus game.config.ts (the game-level PixiGameConfig: preload and effects)
   screens/                  optional: one file per screen group, for multi-screen games
 public/assets/<id>/         the game's own art (shared art lives in public/assets/common; a build ships only common + this folder)
 ```
@@ -93,7 +104,7 @@ The core handles launch params, the loading lifecycle (session, fonts, screen co
 | Need | Use |
 |---|---|
 | Buttons, panels, transitions, counters, stamps | CSS |
-| Small one-off effect (confetti, glow) | `usePixiEffect` from `core/pixi/usePixiEffect`, with a config file for its numbers |
+| Small one-off effect (confetti, glow) | `startBurst` from `core/pixi/wrapper/PixParticleComp`, drawn inside the scene's stage; its numbers live in the game's `pixi/config/game.config.ts` |
 | Reusable or eventful gameplay surface | a typed `PixiScene` class plus `<PixiStage>` |
 
 Canvas code follows a view + config split and strict scene rules: see [04-RENDERING-REACT-PIXI.md](04-RENDERING-REACT-PIXI.md). Inside `GameLayout` wrap the stage in `<CanvasFrame config={config.canvas} fill>`.
@@ -134,6 +145,7 @@ If a dev server shows a blank page after you restructure files, restart it (Vite
 | `higherlower` | Timed shared rounds (`useRoundEngine`: betting 8 s, locked, reveal on the scene's `REVEAL_DONE`, result 1.6 s), one critical Pixi scene with a staged reveal, a confetti effect, intro and tutorial overlays, streak cash-out. Mock maths: "at least" markets, price floor(0.96/P, 2 dp), markets close below P 0.08 or above 0.92, streak bonus 5/10/15% at 3/4/5+ wins. |
 | `accacrash` | Live crash rounds with server polling (betting 5 s, polling every 100 ms, ended 3 s), two bet panels with auto cash-out, a curve scene drawn from config, DOM cards and a simulated crowd. Mock maths: P(M >= x) = 0.96/x, multiplier e^(0.06 t), boosts 0.10/0.25/0.50 that never move the crash point. The server decides the paid multiplier (a button showing 1.26x paid 1.27x in a play test). |
 | `lastmanstanding` | A multi-screen React game with no Pixi (`renderer: 'dom'`): setup, play, match playback, banked; server-owned fixtures and a 20-round prize ladder. |
+| `cardpick` | Scaffolded with `--scene --sound`, then filled in. Three face-down cards as config elements, each a tap target (`UIUtil.bindInteractions`); every canvas pick has a keyboard-accessible React button that calls the same `pick`; the server (mock: one winner in three, RTP 0.96) decides and the scene only turns the cards over; sounds through `useSound` with a React mute control; PBF badge art (the 28 KB atlas Higher or Lower uses). `?mockSeed=N` repeats the mock draw for browser tests. |
 
 Known omissions against the original prototypes: Higher or Lower has no 1-versus-2 mode switch, leaderboards
-or sound; no game has sound.
+or sound. `cardpick` is the only game with sound.

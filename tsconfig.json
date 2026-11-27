@@ -20,7 +20,8 @@
     "allowImportingTsExtensions": true
   },
   "include": [
-    "src"
+    "src",
+    "tests/fixtures"
   ],
   "exclude": [
     "src/**/*.check.ts"

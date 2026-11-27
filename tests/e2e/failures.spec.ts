@@ -40,12 +40,22 @@ test('session error: the maintenance screen is shown and no canvas is created', 
   expect(await page.locator('canvas').count()).toBe(0);
 });
 
-// A currency code Intl cannot format (?currency=COINS reaches the mock session) makes the screen throw while
-// rendering. Before the error boundary this unmounted everything and left a blank page.
+// A screen that throws while rendering (here: money formatting forced to fail for ?currency=COINS, which reaches the
+// mock session) must show the runtime error screen. Before the error boundary this unmounted everything and left a blank page.
 for (const game of GAMES) {
   test(`${game.id}: a screen that crashes while rendering shows the runtime error screen, and Reload works`, async ({
     page,
   }) => {
+    // formatMoney never throws for a bad currency code (it shows the code as text), so make its text fallback fail too:
+    // the screen then throws while rendering, which is what the error boundary is for
+    await page.addInitScript(() => {
+      const Real = Intl.NumberFormat;
+      Intl.NumberFormat = function (this: unknown, locale?: string | string[], options?: Intl.NumberFormatOptions) {
+        if (options?.style === 'currency' || options?.minimumFractionDigits === 2)
+          throw new RangeError('forced failure');
+        return new Real(locale, options);
+      } as unknown as typeof Intl.NumberFormat;
+    });
     await page.goto(`/${game.id}/?currency=COINS`);
     await expect(page.getByText('Something went wrong')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText('The game stopped unexpectedly. Please reload the game.')).toBeVisible();

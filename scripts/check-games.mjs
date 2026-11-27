@@ -11,6 +11,12 @@
 // 7. screens are built on the shared GameLayout, and never reach for its CSS classes (use core/ui/GameLayout)  [Portion 3]
 // 8. src/core never imports a game and never names one (core stays independent of individual games)  [Portion 1]
 // 9. a game that declares translations has English ({ en: ... }) and an i18n/en.ts dictionary  [Portion 6]
+// 10. src/core/boot never imports pixi.js or core/pixi statically, only through import()  [Portion 4]
+// 11. the Spine runtime is never imported statically, and only core/pixi/wrapper/SpineRuntime.ts may import() it  [Phase 2]
+// 12. nothing under src or tests imports legacy/, the temporary reference copy of the old framework  [Phase 3]
+// 13. src/core/audio never imports Pixi  [Phase 5]
+// 14. the boot never imports core/audio or core/host statically  [Phase 5]
+// 15. src/core/host never posts a message to "*"  [Phase 6]
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 
@@ -122,6 +128,56 @@ for (const f of walk(resolve('src/core')).filter((x) => /\.(ts|tsx)$/.test(x))) 
   for (const id of ids)
     if (new RegExp(`\\b${id}\\b`, 'i').test(code)) problems.push(`${rel(f)}: core names the game "${id}"`);
 }
+
+// 10. the boot never imports Pixi or core/pixi statically (only through import()), so Pixi stays out of the boot bundle
+for (const f of walk(resolve('src/core/boot')).filter((x) => /\.(ts|tsx)$/.test(x) && !x.endsWith('.check.ts')))
+  for (const m of stripComments(text(f)).matchAll(/^\s*import\b([^;]*?)from\s+['"]([^'"]+)['"]/gms)) {
+    const isTypeOnly = /^\s*import\s+type\b/.test(m[0]);
+    if (/^(pixi\.js|core\/pixi\/|(\.\.\/)+pixi\/)/.test(m[2]) && !isTypeOnly)
+      problems.push(`${rel(f)}: statically imports "${m[2]}"; the boot loads Pixi only through import()`);
+  }
+
+// 11. the Spine runtime is lazy: nothing imports it statically (that would put it in the importer's chunk, and the boot
+// chunk for a boot file), and only src/core/pixi/wrapper/SpineRuntime.ts may load it, through import(). `import type` is fine.
+const SPINE_RUNTIME_FILE = 'src/core/pixi/wrapper/SpineRuntime.ts';
+const SPINE_IMPORT =
+  /(import\s+type\b[^;]*?from\s*|import\s*\(\s*|(?:import|export)\b[^;]*?from\s*|import\s+)['"](@pixi\/spine-pixi|@esotericsoftware\/spine-[^'"]*)['"]/gs;
+for (const f of walk(resolve('src')).filter((x) => /\.(ts|tsx)$/.test(x)))
+  for (const m of stripComments(text(f)).matchAll(SPINE_IMPORT)) {
+    if (/^import\s+type\b/.test(m[1])) continue;
+    if (/^import\s*\(/.test(m[1])) {
+      if (rel(f) !== SPINE_RUNTIME_FILE)
+        problems.push(`${rel(f)}: loads "${m[2]}" itself; only ${SPINE_RUNTIME_FILE} may (use loadSpineRuntime)`);
+    } else
+      problems.push(
+        `${rel(f)}: statically imports "${m[2]}"; Spine loads only through import() in ${SPINE_RUNTIME_FILE}`,
+      );
+  }
+
+// 12. nothing under src or tests imports legacy/ (the temporary copy of the old framework, kept as a reference only)
+for (const f of [...walk(resolve('src')), ...walk(resolve('tests'))].filter((x) => /\.(ts|tsx|mjs)$/.test(x)))
+  for (const m of stripComments(text(f)).matchAll(IMPORT_SPEC))
+    if (/(^|\/)legacy\//.test(m[1]))
+      problems.push(`${rel(f)}: imports "${m[1]}" (legacy/ is a reference copy: adapt the file into src/core instead)`);
+
+// 13. src/core/audio is renderer-independent: it never imports Pixi (a DOM game can have sound)  [Phase 5]
+for (const f of walk(resolve('src/core/audio')).filter((x) => /\.(ts|tsx)$/.test(x)))
+  for (const m of stripComments(text(f)).matchAll(IMPORT_SPEC))
+    if (/^(pixi\.js|core\/pixi\/|(\.\.\/)+pixi\/)/.test(m[1]))
+      problems.push(`${rel(f)}: imports "${m[1]}"; core/audio must not depend on Pixi`);
+
+// 14. optional services are lazy: the boot never imports core/audio or core/host statically (only through import())  [Phase 5]
+for (const f of walk(resolve('src/core/boot')).filter((x) => /\.(ts|tsx)$/.test(x) && !x.endsWith('.check.ts')))
+  for (const m of stripComments(text(f)).matchAll(/^\s*import\b([^;]*?)from\s+['"]([^'"]+)['"]/gms)) {
+    const isTypeOnly = /^\s*import\s+type\b/.test(m[0]);
+    if (/^(core\/(audio|host)\/|(\.\.\/)+(audio|host)\/)/.test(m[2]) && !isTypeOnly)
+      problems.push(`${rel(f)}: statically imports "${m[2]}"; optional services load only through import()`);
+  }
+
+// 15. the host bridge never posts to every origin: no postMessage with a "*" target anywhere in src/core/host  [Phase 6]
+for (const f of walk(resolve('src/core/host')).filter((x) => /\.(ts|tsx)$/.test(x) && !x.endsWith('.check.ts')))
+  if (/postMessage\s*\([^)]*['"]\*['"]/.test(stripComments(text(f))))
+    problems.push(`${rel(f)}: posts a message to "*"; address the host origin`);
 
 // @game is the running game's entry, wired up only by the app shell
 for (const f of walk(resolve('src')).filter((x) => /\.(ts|tsx)$/.test(x)))

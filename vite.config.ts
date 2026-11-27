@@ -5,6 +5,8 @@ import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite';
 
+import { thirdPartyNotices } from './vite-plugins/thirdPartyNotices.mjs';
+
 const src = fileURLToPath(new URL('./src', import.meta.url));
 
 /** Games are folders under src/games with an index.ts. */
@@ -140,7 +142,7 @@ export default defineConfig(({ command }) => {
   return {
     base: './',
     publicDir: command === 'build' ? false : 'public',
-    plugins: [react(), gameAssets(id), startupHints(id)],
+    plugins: [react(), gameAssets(id), startupHints(id), thirdPartyNotices()],
     define: { __ASSET_VERSIONS__: JSON.stringify(command === 'build' ? assetVersions(id) : {}) },
     resolve: {
       alias: [

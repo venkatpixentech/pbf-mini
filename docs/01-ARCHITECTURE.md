@@ -56,7 +56,8 @@ pbf-game-framework/
       game/defineGame.ts     the game contract
       hooks/                 useRoundEngine (phase sequence; timing comes from server time), useApiMessage (error code to copy)
       pixi/                  PixiStage, scene contract, CanvasFrame, viewConfig (+ check), buildView,
-                             theme, usePixiEffect, stageAssets, preload, warmup
+                             theme, usePixiEffect, stageAssets, preload, warmup, AnimationServiceProxy,
+                             GameConfigProxy, wrapper/ (PixParticleComp); also utils/LoggerService, hooks/useStageStatus
       services/              RoundEngine, ApiError, money, mockTransport (MOCK), services.check
       ui/                    AppShell, GameLayout, GameHeader, StakeChips
     games/<id>/
@@ -64,7 +65,7 @@ pbf-game-framework/
       <Name>Screen.tsx       root screen (React)
       <id>.css               game styles
       api/                   types.ts (contract), mockServer.ts + mockData.ts (MOCK), mockServer.check.ts
-      scenes/                Pixi games: <name>.config.ts + <Name>Scene.ts, config.check.ts
+      pixi/                  Pixi games: view/ (<Name>Scene.ts, effects) + config/ (<name>.config.ts, config.check.ts)
       screens/               multi-screen games: one file per screen group
   docs/                      this documentation; docs/archive holds history and evidence
 ```
@@ -91,7 +92,7 @@ pbf-game-framework/
 | D-005 | No `@pixi/react` | It needs React 19; the project stays on React 18.3.1 |
 | D-006 | Mock backends implement the same TypeScript contract the real backend must implement | Games are built and tested before backend contracts exist, without inventing client maths |
 
-Non-goals: no shared Pixi application, no Pixi UI kit, no client-side outcomes, no slot-machine concepts in
+Non-goals: no Application shared between stages, no client-side outcomes, no slot-machine concepts in
 the core (PBF games are not slots: no reels, paylines or client RNG).
 
 ## Known limitations

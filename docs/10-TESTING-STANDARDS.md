@@ -29,7 +29,7 @@ aliased `core/...` modules. Each is listed in the `check` script in `package.jso
 | `src/games/higherlower/api/mockServer.check.ts` | Stakes, settle, cash out, errors, simulated RTP | single-pick RTP 0.9518 over 20000 rounds |
 | `src/games/accacrash/api/mockServer.check.ts` | Bets, cash out, crash distribution, boosts | P(M>=2) 0.480, simulated RTP 0.9419, 1029/2000 runs boosted |
 | `src/games/lastmanstanding/api/mockServer.check.ts` | Stake, fixtures, picks, cash out, loss, ladder | round-1 return 0.9456 over 6000 games |
-| `src/games/higherlower/scenes/config.check.ts`, `src/games/accacrash/scenes/config.check.ts` | The game's view configs validate | `ok` |
+| `src/games/higherlower/pixi/config/config.check.ts`, `src/games/accacrash/pixi/config/config.check.ts` | The game's view configs validate | `ok` |
 
 Mock servers take `latencyMs: 0` and a seeded `random` for these checks. Fixtures are synthetic only (no real
 player names or user data). The simulated RTPs check the mock maths; the real maths belong to the backend.
@@ -84,7 +84,7 @@ The full method and every recorded run are in
 
 ## Gaps
 
-- No unit, component or end-to-end test runner (Vitest, Testing Library, Playwright) is installed; adding
+- Browser tests: `npm run build` (the games), then `npm run test:e2e`, which first runs `npm run build:harness` (the fixtures under `tests/fixtures`, none of them a game: Spine, display, a development build of the display page, audio and host pages). The specs: games, layout, resize, i18n, failures, spine, display, interaction, scroll, audio, host and cardpick. `npm run bundle-report` shows what each game loads (Pixi, Spine and audio stay out of the boot). `npm run verify-scaffold` proves the new-game workflow on a clean copy (docs/03). No unit or component test runner (Vitest, Testing Library) is installed; adding
   them is an open decision.
 - The browser, layout and loading measurements above were run with scripts outside this repository; they
   are not reproducible from `npm` scripts yet.

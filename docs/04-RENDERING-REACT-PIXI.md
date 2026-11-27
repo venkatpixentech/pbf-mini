@@ -8,7 +8,7 @@ canvas gameplay and heavy effects. This doc covers how the two connect and the r
 | Need | Use |
 |---|---|
 | Buttons, panels, text, counters, stamps, transitions | React + CSS (no animation library is installed) |
-| A small one-off canvas effect (confetti, glow) | `usePixiEffect` (`src/core/pixi/usePixiEffect.tsx`) with a config file for its numbers |
+| A small one-off canvas effect (confetti, glow) | draw it inside the scene's existing stage: `startBurst` (`src/core/pixi/wrapper/PixParticleComp.ts`), numbers in the game's `pixi/config/game.config.ts`. `usePixiEffect` opens its own Application and is only for a separate canvas |
 | A gameplay surface with state or events (card flip, crash curve) | a typed `PixiScene` class inside `<PixiStage>` |
 
 A game that needs no canvas sets `renderer: 'dom'` and never downloads Pixi (Last Man Standing). The boot
@@ -20,12 +20,53 @@ itself never imports Pixi (doc 05).
 |---|---|
 | `core/pixi/PixiStage.tsx` | React component that owns one Pixi `Application` per mount and runs a scene in it |
 | `core/pixi/scene.ts` | Scene contract: `PixiScene`, `SceneContext`, `SceneFactory`, `StageAsset` |
-| `core/pixi/usePixiEffect.tsx` | Wraps a draw function in a scene for quick effects |
+| `core/pixi/usePixiEffect.tsx` | Wraps a draw function in its own stage (a second Application); ordinary effects use `startBurst` inside the scene instead |
 | `core/pixi/CanvasFrame.tsx` | The canvas box: height from a view config, or `fill` to fill a layout slot |
 | `core/pixi/viewConfig.ts` | Typed config shapes (canvas portion, text/sprite/shape/group elements) and validators |
 | `core/pixi/buildView.ts` | `buildElements(config, data)`: config element list to Pixi objects, with data binding |
 | `core/pixi/theme.ts` | `COLORS`, `FONTS`, `TIER_COLORS` as Pixi values (names match the CSS tokens) |
 | `core/pixi/stageAssets.ts`, `preload.ts`, `warmup.ts` | Ref-counted stage assets, boot preload, WebGL warm-up (docs 05, 07) |
+| `core/pixi/AnimationServiceProxy.ts` | Tweens and easings without an animation library (`tween`, `wait`, `killTweensOf`, `ease`, `window01`; the old `AnimationProxy` method names and gsap ease strings are accepted). One ticker callback per stage, stopped on unmount |
+| `core/pixi/wrapper/PixParticleComp.ts` | `startBurst(ctx, config)`: a particle burst inside the existing stage (physics in `PixParticleStep.ts`) |
+| `core/pixi/GameConfigProxy.ts` | `PixiGameConfig` (preload, effects; later spine, sounds, host) and `validatePixiConfig`. A game writes `{ ... } satisfies PixiGameConfig` in `pixi/config/game.config.ts` |
+| `core/utils/LoggerService.ts` | `Logger` and `warnOnce` |
+| `core/hooks/useStageStatus.ts` | The shared `onError` and `onRecovered` props of a stage |
+
+**Rule for every game and every phase:** React is the default. React owns the shell, screens, layout, controls,
+dialogs, text, loading and error states and accessible interaction; the game's React and TypeScript layers own state,
+rules and backend calls. Pixi owns only bounded visual scenes (the card reveal, the curve, Spine and particle
+effects). React passes typed props to the scene and the scene emits typed events back. A legacy Pixi button or popup
+that serves the game UI stays in React. The master checklist of carried legacy capabilities is
+[PBF-PIXI-CAPABILITY-MATRIX.md](PBF-PIXI-CAPABILITY-MATRIX.md).
+
+## Assets, display wrappers and layout (inside a canvas)
+
+React lays out the page and the canvas box. These serve only what is drawn inside a canvas:
+
+- **Assets.** A game declares them in `pixi/config/game.config.ts` (`PixiGameConfig`: `assets`, `bundles`, `spine`, `design`).
+  `AssetDef` kinds: image, atlas, `sequence` (`{n}` sheets), canvas `font`, `bmpfont`; `src` may hold `{res}` (`@1x` or `@0.5x`).
+  `<PixiStage assets={...} spine={...}>` takes a lease before the scene starts and releases it after the Application is destroyed; a
+  scene can also take bundles with `AssetLoader.acquireBundles`. Leases are ref-counted per alias (two stages share one load), a file
+  gets a timeout and one retry, a failure is `StageError` kind `assets`, and a failed or half-loaded asset is cleaned up on release.
+  Core: `AssetLoader.ts` (adapted from the legacy loader), `AssetRegistry.ts` (the ownership rules, shared with Spine).
+- **Display wrappers.** `core/pixi/wrapper/PixSprite`, `PixText`, `PixBMPText`, `PixGraphics`, `PixContainer`, `PixAnimatedSprite` and
+  `core/pixi/UIUtilService.ts` (texture lookup, text that shrinks to `maxWidth` or `maxLines`, frame lists, shapes), adapted from
+  the legacy files. `buildElements` also builds `bitmapText`, `animatedSprite` and a `spine` placeholder, plus the arc, polygon and
+  gradient shapes.
+- **Layout.** `core/pixi/layout.ts`: pure `fitScale`, `stageFit` (letterbox a design size into the stage), `placeInBox` and
+  `applyPlacement`. A scene lays out in design pixels and applies `stageFit(design, size)` from `resize(width, height)`.
+  `DeviceConfigProxy` gives the asset resolution and device class.
+- **Interaction.** For an object that is part of a scene's artwork and needs a tap: give its element an `interactive: { event }` block
+  (`hitPadding`, `minTarget` in CSS px, default 44) and call, from the scene's `init`,
+  `bindInteractions(host: InteractionHost, root: Container, elements: ElementConfig[], onEvent: (e: SceneInteraction) => void): InteractionBinding`
+  on `UIUtil`, for example `UIUtil.bindInteractions(ctx, this.root, elements, (event) => ctx.emit({ type: 'interaction', event }))`
+  (the scene's own event type wraps `SceneInteraction`), then `binding.refresh()` from `resize()` and `binding.setEnabled(target, bool)`
+  from `update()`. `ctx` is an `InteractionHost` (`app`, `root`, `track`, `input`). The scene reports typed `SceneInteraction`
+  events (`press`, `release`, `tap` with a design position, `hover`, `out`, `cancel` with a reason) and React acts on them.
+  `ctx.input.blocked` (paused, hidden tab, lost context) cancels presses in progress. **Accessibility:** an essential action offered in the canvas
+  must also be a keyboard-accessible React control calling the same handler. Game buttons, menus and dialogs stay React. The legacy names
+  (`setClickable`, `addInteraction`, ...) are on `UIUtilService` for lower-level use.
+- Browser proof: `tests/fixtures/display-harness` with `tests/e2e/display.spec.ts` and `tests/e2e/interaction.spec.ts`.
 
 ## `<PixiStage>`
 
@@ -83,10 +124,10 @@ Rules:
 
 Every canvas has a config file (what to draw) and a view (how it moves):
 
-- **Config** `scenes/<name>.config.ts`: canvas portion (`canvas: { heightPct, minHeight, maxHeight }`, used
+- **Config** `pixi/config/<name>.config.ts`: canvas portion (`canvas: { heightPct, minHeight, maxHeight }`, used
   when not in a layout slot), element list (positions, sizes, fonts and colours by theme name), timings,
   assets. This is the file to edit to change the canvas.
-- **View** `scenes/<Name>Scene.ts`: `buildElements(config.elements, data)` builds the objects; each object is
+- **View** `pixi/view/<Name>Scene.ts`: `buildElements(config.elements, data)` builds the objects; each object is
   labelled with its config `id` (`getChildByLabel`). No literal sizes, colours, fonts or timings in the view.
 - Element types: `text` (`text` or `bind`, optional `upper`), `sprite` (`alias`, may contain `{key}` tokens
   such as `{tier}Badge`), `shape` (`fill`, `fillBind` or `stroke`), `group` (children).
@@ -94,18 +135,18 @@ Every canvas has a config file (what to draw) and a view (how it moves):
   have a size); a missing texture or bind value warns once and draws nothing instead of throwing.
 - Live drawings (the crash curve) stay in the view, but their padding, widths, colours and labels come
   from the config.
-- Each Pixi game has a `scenes/config.check.ts` self-check that validates its configs in Node.
+- Each Pixi game has a `pixi/config/config.check.ts` self-check that validates its configs in Node.
 
-Reference implementations: `src/games/higherlower/scenes/` (card reveal: flip, staged reveal, OVR roll) and
-`src/games/accacrash/scenes/` (crash curve with a pulsing head, labels from config).
+Reference implementations: `src/games/higherlower/pixi/` (card reveal: flip, staged reveal, OVR roll) and
+`src/games/accacrash/pixi/` (`view/` + `config/`) (crash curve with a pulsing head, labels from config).
 
 Pixi views in the current games (3 views in 2 games; each has its own config):
 
 | Game | View | What it does | File |
 |---|---|---|---|
-| Higher or Lower | Card reveal | Flips the cards and runs the staged reveal (`PixiScene` class, `critical`) | `src/games/higherlower/scenes/CardRevealScene.ts` |
-| Higher or Lower | Win confetti | One burst when a round is won (`usePixiEffect` draw function) | `src/games/higherlower/WinConfetti.tsx` |
-| Acca Crash | Crash curve | Draws the live curve with a pulsing head (`PixiScene` class) | `src/games/accacrash/scenes/CrashCurveScene.ts` |
+| Higher or Lower | Card reveal | Flips the cards and runs the staged reveal (`PixiScene` class, `critical`) | `src/games/higherlower/pixi/view/CardRevealScene.ts` |
+| Higher or Lower | Win confetti | One burst per won round, drawn inside the card stage with `startBurst` (no second canvas) | `src/games/higherlower/pixi/view/CardRevealScene.ts` |
+| Acca Crash | Crash curve | Draws the live curve with a pulsing head (`PixiScene` class) | `src/games/accacrash/pixi/view/CrashCurveScene.ts` |
 | Last Man Standing | none | `renderer: 'dom'`, plain React and CSS | n/a |
 
 ## Verified behaviour

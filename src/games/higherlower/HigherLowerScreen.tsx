@@ -6,7 +6,8 @@ import type { GameScreenProps } from 'core/game/defineGame';
 import { useApiMessage } from 'core/hooks/useApiMessage';
 import { useRoundEngine } from 'core/hooks/useRoundEngine';
 import { CanvasFrame } from 'core/pixi/CanvasFrame';
-import { PixiStage, type StageError } from 'core/pixi/PixiStage';
+import { useStageStatus } from 'core/hooks/useStageStatus';
+import { PixiStage } from 'core/pixi/PixiStage';
 import { createActionGuard, retryWithSameKey } from 'core/round/actionGuard';
 import { useAtServerTime, useCountdown } from 'core/round/react';
 import { createServerClock, timed } from 'core/round/serverClock';
@@ -21,9 +22,8 @@ import type { Card, HigherLowerApi, InitResponse, MarketId, ResultResponse, Run 
 import { type FeedEvent, nextFeedEvent } from './feed';
 import { useT } from './i18n';
 import { FTUE_STEPS, hasFtueDone, hasSeenIntro, markFtueDone, markIntroSeen } from './ftue';
-import { cardRevealConfig } from './scenes/cardReveal.config';
-import { CARD_REVEAL_ASSETS, type CardRevealEvent, CardRevealScene } from './scenes/CardRevealScene';
-import { WinConfetti } from './WinConfetti';
+import { cardRevealConfig } from './pixi/config/cardReveal.config';
+import { CARD_REVEAL_ASSETS, type CardRevealEvent, CardRevealScene } from './pixi/view/CardRevealScene';
 
 type Phase = 'betting' | 'locked' | 'reveal' | 'result';
 // What is on screen. The SERVER owns the round: it opens and closes betting and settles by its own clock. These
@@ -156,12 +156,12 @@ export function HigherLowerScreen({ api, init }: GameScreenProps<HigherLowerApi,
     },
     [engine],
   );
-  const onSceneError = useCallback(
-    (e: StageError) => setMessage('common.display.error', { kind: e.kind }),
-    [setMessage],
+  const { onError: onSceneError, onRecovered: onSceneRecovered } = useStageStatus(setMessage);
+  // `celebrate` is the id of a won round: the scene plays one confetti burst per id (inside the same stage).
+  const sceneProps = useMemo(
+    () => ({ ...cards, celebrate: phase === 'result' && lastOutcome === 'won' ? round.id : null }),
+    [cards, phase, lastOutcome, round.id],
   );
-
-  const onSceneRecovered = useCallback(() => setMessage(null), [setMessage]);
 
   const betting = phase === 'betting';
   const choose = async (market: MarketId) => {
@@ -311,15 +311,10 @@ export function HigherLowerScreen({ api, init }: GameScreenProps<HigherLowerApi,
           {lastOutcome === 'won' ? t('hol.stamp.won') : t('hol.stamp.lost')}
         </b>
       )}
-      {phase === 'result' && lastOutcome === 'won' && (
-        <div className="hol-confetti" key={`confetti-${round.id}`}>
-          <WinConfetti />
-        </div>
-      )}
       <PixiStage
         critical
         scene={createScene}
-        props={cards}
+        props={sceneProps}
         assets={CARD_REVEAL_ASSETS}
         onEvent={onSceneEvent}
         onError={onSceneError}

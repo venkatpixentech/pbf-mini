@@ -1,0 +1,34 @@
+/* GameLayout root: the smallest height the game can be played in (see docs/06-RESPONSIVE-GAME-LAYOUT.md) */
+.cardpick {
+  --pbf-play-min: 320px;
+}
+.cardpick-stage {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.cardpick-result {
+  padding: 8px 16px;
+  text-align: center;
+  font: 900 22px/1.2 var(--font-display);
+  text-transform: uppercase;
+  min-height: 1.2em;
+}
+.cardpick-result.won {
+  color: var(--status-win);
+}
+.cardpick-result.lost {
+  color: var(--status-loss);
+}
+/* the keyboard-accessible twins of the canvas cards: real buttons that make the same pick */
+.cardpick-picks {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.cardpick-canvas {
+  min-width: 0;
+  overflow: hidden;
+}

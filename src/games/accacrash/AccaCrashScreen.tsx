@@ -1,13 +1,14 @@
 import './accaCrash.css';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { assetUrl } from 'core/boot/assetUrl';
 import type { GameScreenProps } from 'core/game/defineGame';
 import { useApiMessage } from 'core/hooks/useApiMessage';
 import { useRoundEngine } from 'core/hooks/useRoundEngine';
+import { useStageStatus } from 'core/hooks/useStageStatus';
 import { CanvasFrame } from 'core/pixi/CanvasFrame';
-import { PixiStage, type StageError } from 'core/pixi/PixiStage';
+import { PixiStage } from 'core/pixi/PixiStage';
 import { createActionGuard, retryWithSameKey } from 'core/round/actionGuard';
 import { useAtServerTime, useCountdown } from 'core/round/react';
 import { createServerClock, timed } from 'core/round/serverClock';
@@ -20,8 +21,8 @@ import { StakeChips } from 'core/ui/StakeChips';
 
 import type { AccaCrashApi, Bet, GoalEvent, InitResponse, Panel, StatusResponse } from './api/types';
 import { type CrowdBet, generateCrowd, settleCrowd } from './crowd';
-import { crashCurveConfig } from './scenes/crashCurve.config';
-import { CrashCurveScene } from './scenes/CrashCurveScene';
+import { crashCurveConfig } from './pixi/config/crashCurve.config';
+import { CrashCurveScene } from './pixi/view/CrashCurveScene';
 
 type CrowdTab = 'all' | 'previous' | 'top';
 const CROWD_SIZE = 12;
@@ -176,8 +177,7 @@ export function AccaCrashScreen({ api, init }: GameScreenProps<AccaCrashApi, Ini
   });
   const { secondsLeft } = useCountdown(clock, round.timing.opensAt, round.timing.closesAt);
 
-  const onSceneError = useCallback((e: StageError) => setMessage(`Display error (${e.kind}).`), [setMessage]);
-  const onSceneRecovered = useCallback(() => setMessage(null), [setMessage]);
+  const { onError: onSceneError, onRecovered: onSceneRecovered } = useStageStatus(setMessage);
 
   const placeBetAction = async (p: Panel) => {
     if (busy || phase !== 'betting') return;

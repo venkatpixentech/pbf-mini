@@ -5,8 +5,13 @@ import { markStartup, reportCriticalScene } from 'core/boot/startup';
 import { onLanguageChange } from 'core/i18n';
 
 import { relabelTexts } from './buildView';
-import type { PixiScene, SceneFactory, StageAsset } from './scene';
-import { loadStageAssets, unloadStageAssets } from './stageAssets';
+import type { AssetLease } from './AssetRegistry';
+import type { PixiScene, SceneFactory, StageInput } from './scene';
+import { acquireStageAssets } from './stageAssets';
+import type { AssetDef, SpineAssetDef } from './viewConfig';
+import type { SpineLease } from './wrapper/SpineAssets';
+import { spineAssets } from './wrapper/SpineAssetBackend';
+import { loadSpineRuntime } from './wrapper/SpineRuntime';
 
 export type StageError = { kind: 'init' | 'assets' | 'scene' | 'context-lost'; error?: unknown };
 
@@ -16,7 +21,18 @@ const CONTEXT_RESTORE_TIMEOUT_MS = 3000;
 type Props<P, E> = {
   scene: SceneFactory<P, E>;
   props: P;
-  assets?: StageAsset[];
+  /**
+   * Images, atlases, sequences, fonts and bitmap fonts the scene uses (the old `{ alias, src }` list is valid). The stage
+   * loads them before the scene starts, holds them while mounted and releases them on unmount; stages that list the same
+   * alias share one load. A failed load (after one retry) is reported as `StageError` kind `assets`.
+   */
+  assets?: AssetDef[];
+  /**
+   * Spine assets the scene uses (PixSpine.create). The stage loads them before the scene starts, holds them while
+   * mounted and releases them on unmount; stages that list the same asset share one load. The Spine runtime itself
+   * is fetched only when this is not empty.
+   */
+  spine?: SpineAssetDef[];
   onEvent?: (event: E) => void;
   onError?: (error: StageError) => void;
   /** After a `context-lost` error the stage is usable again: the context came back and was redrawn, or the stage was rebuilt. */
@@ -40,6 +56,7 @@ export function PixiStage<P, E>({
   scene,
   props,
   assets = [],
+  spine,
   onEvent,
   onError,
   onRecovered,
@@ -49,7 +66,7 @@ export function PixiStage<P, E>({
   critical,
 }: Props<P, E>) {
   const host = useRef<HTMLDivElement>(null);
-  const live = useRef<{ app: Application; scene: PixiScene<P, E> } | null>(null);
+  const live = useRef<{ app: Application; scene: PixiScene<P, E>; notifyBlocked: () => void } | null>(null);
   // Bumped to rebuild the Application when a lost context is not restored in time.
   const [generation, setGeneration] = useState(0);
   // Latest values without re-running the mount effect.
@@ -66,17 +83,48 @@ export function PixiStage<P, E>({
     let cancelled = false;
     let done = false;
     let step: StageError['kind'] = 'init';
-    const started = { app: false, assets: false, scene: false };
+    const started = { app: false, scene: false };
+    let assetLease: AssetLease | undefined;
+    let spineLease: SpineLease | undefined;
+    // Input is blocked for the same reasons the ticker stops: paused, hidden tab, lost context. Interaction bindings
+    // subscribe (scene ctx.input) and cancel presses in progress when it turns true.
+    let contextLost = false;
+    let lastBlocked = false;
+    const blockedListeners = new Set<(blocked: boolean) => void>();
+    const isBlocked = () => !!latest.current.paused || document.hidden || contextLost;
+    const notifyBlocked = () => {
+      const blocked = isBlocked();
+      if (blocked === lastBlocked) return;
+      lastBlocked = blocked;
+      for (const listener of [...blockedListeners]) listener(blocked);
+    };
+    const input: StageInput = {
+      get blocked() {
+        return isBlocked();
+      },
+      onBlockedChange(listener) {
+        blockedListeners.add(listener);
+        return () => blockedListeners.delete(listener);
+      },
+    };
 
     const teardown = () => {
       if (started.scene) instance.destroy();
       disposers.splice(0).forEach((dispose) => dispose());
       if (started.app) app.destroy({ removeView: true }, { children: true });
-      if (started.assets) void unloadStageAssets(assets);
+      assetLease?.release();
+      spineLease?.release(); // after the Application is gone: no PixSpine is drawing from these textures any more
     };
 
     (async () => {
       try {
+        if (spine?.length) {
+          // Spine registers its render pipe with Pixi when it loads, and a renderer only picks up pipes registered
+          // before the Application is created, so the runtime comes first (it is lazy: only stages with Spine do this).
+          step = 'assets';
+          await loadSpineRuntime();
+          step = 'init';
+        }
         await app.init({
           resizeTo: el,
           backgroundAlpha: transparent ? 0 : 1,
@@ -88,9 +136,9 @@ export function PixiStage<P, E>({
         if (critical) markStartup('renderer');
 
         step = 'assets';
-        const loading = loadStageAssets(assets);
-        started.assets = true; // ref counts are taken synchronously, so release them even if loading fails
-        await loading;
+        assetLease = acquireStageAssets(assets); // references are taken now, so they are released in teardown even if loading fails
+        if (spine?.length) spineLease = spineAssets.acquire(spine); // also taken now, released in teardown
+        await Promise.all([assetLease.ready, spineLease?.ready]);
         if (cancelled) return;
 
         el.appendChild(app.canvas);
@@ -101,15 +149,19 @@ export function PixiStage<P, E>({
         const onLost = (e: Event) => {
           e.preventDefault();
           app.ticker.stop();
+          contextLost = true;
+          notifyBlocked();
           latest.current.onError?.({ kind: 'context-lost' });
           clearTimeout(restoreTimer);
           restoreTimer = setTimeout(() => setGeneration((g) => g + 1), CONTEXT_RESTORE_TIMEOUT_MS);
         };
         const onRestored = () => {
           clearTimeout(restoreTimer);
+          contextLost = false;
           instance.resize(app.screen.width, app.screen.height);
           app.render();
           if (!document.hidden && !latest.current.paused) app.ticker.start();
+          notifyBlocked();
           latest.current.onRecovered?.();
         };
         canvas.addEventListener('webglcontextlost', onLost);
@@ -134,9 +186,11 @@ export function PixiStage<P, E>({
         const onVisibility = () => {
           if (document.hidden || latest.current.paused) app.ticker.stop();
           else app.ticker.start();
+          notifyBlocked();
         };
         document.addEventListener('visibilitychange', onVisibility);
         disposers.push(() => document.removeEventListener('visibilitychange', onVisibility));
+        disposers.push(() => blockedListeners.clear());
 
         // a language switch relabels every translated text in the stage, in place
         disposers.push(onLanguageChange(() => relabelTexts(app.stage)));
@@ -145,7 +199,7 @@ export function PixiStage<P, E>({
         started.scene = true;
         const initProps = latest.current.props;
         await instance.init(
-          { app, root: app.stage, emit: (e) => latest.current.onEvent?.(e), track: (d) => disposers.push(d) },
+          { app, root: app.stage, emit: (e) => latest.current.onEvent?.(e), track: (d) => disposers.push(d), input },
           initProps,
         );
         if (cancelled) return;
@@ -159,7 +213,8 @@ export function PixiStage<P, E>({
           reportCriticalScene(true);
         }
         if (latest.current.paused) app.ticker.stop();
-        live.current = { app, scene: instance };
+        lastBlocked = isBlocked();
+        live.current = { app, scene: instance, notifyBlocked };
         // A rebuilt stage (generation > 0) replaces a lost context that never came back: tell the screen it recovered.
         if (generation > 0) latest.current.onRecovered?.();
       } catch (error) {
@@ -191,6 +246,7 @@ export function PixiStage<P, E>({
     if (!app) return;
     if (paused) app.ticker.stop();
     else app.ticker.start();
+    live.current?.notifyBlocked();
   }, [paused]);
 
   return <div ref={host} className={className} style={{ width: '100%', height: '100%', position: 'relative' }} />;

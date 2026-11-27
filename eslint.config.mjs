@@ -9,7 +9,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'build/**', 'src/games/lastmanstanding/api/mockData.ts'],
+    ignores: ['dist/**', 'build/**', 'legacy/**', 'src/games/lastmanstanding/api/mockData.ts'],
   },
   {
     files: ['**/*.{ts,tsx}'],

@@ -2,7 +2,7 @@ import type { SessionErrorCode } from '../../../core/services/apiError.ts';
 // Higher or Lower backend contract. The mock server implements it today; the real backend must
 // implement the same shapes (docs/09-BACKEND-INTEGRATION.md). The client never decides outcomes or prices,
 // and never decides when a round opens, closes or settles: the server owns the round timeline.
-import type { Card } from '../scenes/CardRevealScene.ts';
+import type { Card } from '../pixi/view/CardRevealScene.ts';
 
 export type { Card };
 

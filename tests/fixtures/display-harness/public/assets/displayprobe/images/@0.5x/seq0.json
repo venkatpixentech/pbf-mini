@@ -1,0 +1,76 @@
+{
+  "frames": {
+    "bronzeBadge": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 60,
+        "h": 97
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 60,
+        "h": 97
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 98
+      }
+    },
+    "silverBadge": {
+      "frame": {
+        "x": 62,
+        "y": 0,
+        "w": 60,
+        "h": 97
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 60,
+        "h": 97
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 98
+      }
+    },
+    "goldBadge": {
+      "frame": {
+        "x": 124,
+        "y": 0,
+        "w": 59,
+        "h": 97
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 59,
+        "h": 97
+      },
+      "sourceSize": {
+        "w": 59,
+        "h": 97
+      }
+    }
+  },
+  "meta": {
+    "app": "https://www.codeandweb.com/texturepacker",
+    "version": "1.1",
+    "image": "badges.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 184,
+      "h": 97
+    },
+    "scale": "1",
+    "smartupdate": "$TexturePacker:SmartUpdate:b459af146f25e49212aa827effda8424:01a2977da640b28b50f69fa0bac5cec8:78cf70c29726f0b713ed7f58263b9aef$"
+  }
+}

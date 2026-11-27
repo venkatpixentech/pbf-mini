@@ -1,0 +1,119 @@
+Pack Open.png
+size:2048,2048
+filter:Linear,Linear
+scale:0.25
+Glow2 1
+bounds:1089,22,71,68
+offsets:18,19,104,104
+Glow2 4
+bounds:1162,22,71,68
+offsets:18,19,104,104
+Gold Blast/1
+bounds:2,11,1,1
+Gold Blast/10
+bounds:567,285,277,539
+offsets:4,39,281,609
+Gold Blast/11
+bounds:1417,1453,281,593
+offsets:0,16,281,609
+Gold Blast/12
+bounds:2,1437,281,609
+Gold Blast/13
+bounds:2,826,281,609
+Gold Blast/14
+bounds:851,1448,281,598
+offsets:0,0,281,609
+Gold Blast/15
+bounds:285,1437,281,609
+Gold Blast/16
+bounds:1700,1457,281,589
+offsets:0,0,281,609
+Gold Blast/17
+bounds:2,215,281,609
+Gold Blast/18
+bounds:285,826,281,609
+Gold Blast/19
+bounds:285,215,280,609
+offsets:0,0,281,609
+Gold Blast/2
+bounds:1681,194,39,43
+offsets:121,299,281,609
+Gold Blast/20
+bounds:568,1437,281,609
+Gold Blast/21
+bounds:1134,1448,281,598
+offsets:0,0,281,609
+Gold Blast/22
+bounds:568,826,271,609
+offsets:10,0,281,609
+Gold Blast/23
+bounds:841,885,278,389
+offsets:3,161,281,609
+rotate:90
+Gold Blast/24
+bounds:1362,497,265,386
+offsets:1,153,281,609
+Gold Blast/3
+bounds:1843,82,102,110
+offsets:86,265,281,609
+Gold Blast/4
+bounds:1735,347,175,166
+offsets:51,246,281,609
+rotate:90
+Gold Blast/5
+bounds:1362,5,254,232
+offsets:11,220,281,609
+Gold Blast/6
+bounds:1232,885,278,298
+offsets:0,191,281,609
+rotate:90
+Gold Blast/7
+bounds:1307,1165,281,375
+offsets:0,153,281,609
+rotate:90
+Gold Blast/8
+bounds:851,1165,281,454
+offsets:0,112,281,609
+rotate:90
+Gold Blast/9
+bounds:567,2,281,520
+offsets:0,85,281,609
+rotate:90
+PACK/Gold/01
+bounds:1983,1520,262,48
+rotate:90
+PACK/Gold/TEXT 01
+bounds:1735,194,160,151
+PACK/Gold/pack
+bounds:300,57,156,249
+rotate:90
+PACK/Gold/pack01
+bounds:1532,907,256,371
+rotate:90
+PACK/Gold/pack02
+bounds:1629,524,256,381
+PACK/Gold/pack03
+bounds:846,474,256,409
+PACK/Silver/01
+bounds:1983,1784,262,50
+rotate:90
+PACK/Silver/TEXT 01
+bounds:1681,41,160,151
+PACK/Silver/pack
+bounds:846,316,156,248
+rotate:90
+PACK/Silver/pack01
+bounds:1362,239,256,371
+rotate:90
+PACK/Silver/pack02
+bounds:1104,92,256,381
+PACK/Silver/pack03
+bounds:1104,475,256,408
+PACK/pack_Glow
+bounds:2,14,199,296
+offsets:19,0,241,303
+rotate:90
+Shine
+bounds:1618,13,224,61
+offsets:2,33,227,123
+rotate:90

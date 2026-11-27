@@ -266,8 +266,8 @@ interface and the open decision are documented (doc 09) and the mock implements 
 
 The framework is meant to carry 30+ casino and bingo games in five families: instant result (Dice, Limbo,
 Plinko), step and cash out (Mines, Hilo, Chicken), live round (Crash; Acca Crash already works this way),
-slots and reels, and bingo / number draw (Keno, bingo). Rule: a system enters the core only when three or
-more games need it. Planned shared systems, none built yet (backend integration stays per game, see the backend rule above): a bet panel,
+slots and reels, and bingo / number draw (Keno, bingo). Rule: a renderer-independent system enters the core only when three or
+more games need it; the opt-in Pixi toolkit under `core/pixi` (and later `core/audio`, `core/host`) is the approved exception: it is built ahead of need from the old framework's capability list, never loaded by the boot or by DOM games. Planned shared systems, none built yet (backend integration stays per game, see the backend rule above): a bet panel,
 flow hooks per family (instant bet, step session, draw), a wide desktop layout, a fairness modal, autoplay
 (jurisdiction-gated: UK rules ban autoplay, turbo and spins under 2.5 s for online slots), sound and settings.
 The full plan, with the proposed contracts and build order, is in

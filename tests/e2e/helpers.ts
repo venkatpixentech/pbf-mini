@@ -1,11 +1,12 @@
 import { expect, type Page } from '@playwright/test';
 
-export type GameId = 'higherlower' | 'accacrash' | 'lastmanstanding';
+export type GameId = 'higherlower' | 'accacrash' | 'lastmanstanding' | 'cardpick';
 
 export const GAMES: Array<{ id: GameId; pixi: boolean }> = [
   { id: 'higherlower', pixi: true },
   { id: 'accacrash', pixi: true },
   { id: 'lastmanstanding', pixi: false },
+  { id: 'cardpick', pixi: true },
 ];
 
 /** Watches a page: failed requests, console errors/warnings and uncaught errors. */
@@ -44,6 +45,7 @@ export async function dismissIntro(page: Page) {
 export function actionButton(page: Page, id: GameId) {
   if (id === 'lastmanstanding') return page.locator('button', { hasText: /^Start for/ });
   if (id === 'accacrash') return page.locator('.acca-panel .pbf-btn', { hasText: /^Bet/ }).first();
+  if (id === 'cardpick') return page.locator('.cardpick-picks button:not([disabled])').first();
   return page.locator('.hol-markets button:not([disabled])').first();
 }
 

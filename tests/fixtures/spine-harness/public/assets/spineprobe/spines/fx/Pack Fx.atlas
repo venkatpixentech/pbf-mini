@@ -1,0 +1,137 @@
+Pack Fx.png
+size:2048,1024
+filter:Linear,Linear
+pma:true
+scale:0.25
+Firework 2/Comp 2/01_00004
+bounds:244,362,8,23
+offsets:236,94,480,270
+Firework 2/Comp 2/01_00005
+bounds:370,374,11,44
+offsets:235,94,480,270
+rotate:90
+Firework 2/Comp 2/01_00006
+bounds:897,142,61,80
+offsets:209,86,480,270
+Firework 2/Comp 2/01_00007
+bounds:259,26,90,102
+offsets:194,80,480,270
+rotate:90
+Firework 2/Comp 2/01_00008
+bounds:2,2,110,116
+offsets:184,76,480,270
+Firework 2/Comp 2/01_00009
+bounds:960,242,132,131
+offsets:174,71,480,270
+rotate:90
+Firework 2/Comp 2/01_00010
+bounds:805,224,153,150
+offsets:163,60,480,270
+Firework 2/Comp 2/01_00011
+bounds:854,376,173,168
+offsets:152,50,480,270
+Firework 2/Comp 2/01_00012
+bounds:667,400,185,183
+offsets:147,42,480,270
+Firework 2/Comp 2/01_00013
+bounds:244,387,198,191
+offsets:141,38,480,270
+rotate:90
+Firework 2/Comp 2/01_00014
+bounds:667,585,208,201
+offsets:136,32,480,270
+rotate:90
+Firework 2/Comp 2/01_00015
+bounds:1364,579,216,209
+offsets:132,27,480,270
+rotate:90
+Firework 2/Comp 2/01_00016
+bounds:588,134,222,215
+offsets:129,23,480,270
+rotate:90
+Firework 2/Comp 2/01_00017
+bounds:438,577,227,216
+offsets:126,23,480,270
+Firework 2/Comp 2/01_00018
+bounds:1148,797,230,225
+offsets:125,16,480,270
+Firework 2/Comp 2/01_00019
+bounds:913,799,233,223
+offsets:123,17,480,270
+Firework 2/Comp 2/01_00020
+bounds:438,795,237,227
+offsets:121,14,480,270
+Firework 2/Comp 2/01_00021
+bounds:2,356,240,229
+offsets:120,12,480,270
+Firework 2/Comp 2/01_00022
+bounds:1610,798,224,224
+offsets:120,17,480,270
+Firework 2/Comp 2/01_00023
+bounds:2,120,226,234
+offsets:119,8,480,270
+Firework 2/Comp 2/01_00024
+bounds:677,796,226,234
+offsets:118,6,480,270
+rotate:90
+Firework 2/Comp 2/01_00025
+bounds:1380,799,228,223
+offsets:117,15,480,270
+Firework 2/Comp 2/01_00026
+bounds:437,358,217,223
+offsets:128,15,480,270
+rotate:90
+Firework 2/Comp 2/01_00027
+bounds:1575,582,214,222
+offsets:128,16,480,270
+rotate:90
+Firework 2/Comp 2/01_00028
+bounds:1139,581,214,223
+offsets:128,15,480,270
+rotate:90
+Firework 2/Comp 2/01_00029
+bounds:1799,573,209,223
+offsets:128,15,480,270
+Firework 2/Comp 2/01_00030
+bounds:370,134,216,222
+offsets:128,16,480,270
+Firework 2/Comp 2/01_00031
+bounds:1836,810,212,210
+offsets:128,28,480,270
+rotate:90
+Firework 2/Comp 2/01_00032
+bounds:870,546,188,201
+offsets:150,27,480,270
+rotate:90
+Flash
+bounds:114,5,112,113
+offsets:6,5,123,123
+GLOW
+bounds:230,32,322,27
+rotate:90
+Glow 3
+bounds:805,135,87,90
+offsets:10,8,104,104
+rotate:90
+Glow 4
+bounds:602,95,230,37
+offsets:4,0,241,37
+Glow 4.1
+bounds:370,95,230,37
+offsets:4,0,241,37
+Glow 5
+bounds:259,118,267,109
+offsets:10,10,287,129
+rotate:90
+Glow/new glow
+bounds:2,587,434,435
+offsets:1,0,435,435
+Glow2 1
+bounds:960,172,71,68
+offsets:18,19,104,104
+New_Cards/SilverCard_glow
+bounds:1073,644,63,90
+offsets:2,2,67,94
+Shine
+bounds:913,736,224,61
+offsets:2,33,227,123

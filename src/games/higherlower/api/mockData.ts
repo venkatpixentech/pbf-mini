@@ -1,6 +1,6 @@
 // MOCK DATA: synthetic player pool for the mock backend. Not real PBF player data.
-import { NATIONS, type Nation } from '../scenes/cardReveal.config.ts';
-import type { Card } from '../scenes/CardRevealScene.ts';
+import { NATIONS, type Nation } from '../pixi/config/cardReveal.config.ts';
+import type { Card } from '../pixi/view/CardRevealScene.ts';
 
 const FIRST = ['Leo', 'Mason', 'Kai', 'Theo', 'Noah', 'Rafa', 'Jude', 'Luca', 'Omar', 'Ezra', 'Milo', 'Ivan'];
 const LAST = ['Carter', 'Silva', 'Novak', 'Reyes', 'Okafor', 'Berg', 'Moreau', 'Kane', 'Duarte', 'Lindqvist', 'Haddad'];
