@@ -106,6 +106,14 @@ async function ready(page: Page, buffers = 4) {
 }
 const stats = (page: Page) => page.evaluate(() => (window as any).__audio.sound.service.stats());
 const peak = (page: Page, ms = 300) => page.evaluate((m) => (window as any).__audio.peak(m) as Promise<number>, ms);
+/** Waits for the analyser to reach silence (a fade may still be running), then reports it: no fixed sleep to outrun a slow machine. */
+const untilSilent = (page: Page, why: string) =>
+  expect.poll(() => peak(page, 150), { message: why, timeout: 5000, intervals: [50] }).toBeLessThanOrEqual(SILENT);
+/** Waits for the analyser to rise above `min` (a fade in or a recovery) and returns the peak. */
+const untilAbove = async (page: Page, min: number, why: string) => {
+  await expect.poll(() => peak(page, 150), { message: why, timeout: 5000, intervals: [50] }).toBeGreaterThan(min);
+  return peak(page);
+};
 const handle = (page: Page, event: string, param?: string) =>
   page.evaluate(([e, p]) => (window as any).__audio.sound.manager.handle(e, p), [event, param] as const);
 const listeners = (page: Page) => page.evaluate(() => ({ ...(window as any).__listeners }) as Record<string, number>);
@@ -174,7 +182,7 @@ test.describe('Audio harness', () => {
     await expect.poll(async () => (await stats(page)).state).toBe('running');
     expect((await stats(page)).unlocked).toBe(true);
     expect((await listeners(page))['window:keydown']).toBeLessThan(listening + 1);
-    await handle(page, 'START');
+    await handle(page, 'MATCH', 'yes'); // not START: that file is 49 ms, too short to catch on the analyser
     expect(await peak(page)).toBeGreaterThan(LOUD);
   });
 
@@ -235,11 +243,9 @@ test.describe('Audio harness', () => {
 
     await page.getByTestId('mute').click();
     await expect(page.getByTestId('mute')).toHaveAttribute('aria-pressed', 'true');
-    await page.waitForTimeout(250);
-    expect(await peak(page, 200), 'muted').toBeLessThanOrEqual(SILENT);
+    await untilSilent(page, 'muted');
     await page.getByTestId('mute').click();
-    await page.waitForTimeout(250);
-    expect(await peak(page)).toBeGreaterThan(full * 0.7);
+    await untilAbove(page, full * 0.7, 'unmuted');
 
     await page.getByTestId('volume').fill('0.5');
     await page.waitForTimeout(250);
@@ -248,18 +254,23 @@ test.describe('Audio harness', () => {
     expect(half).toBeLessThan(full * 0.75);
 
     await page.getByTestId('ambient').click(); // ambient group off
-    await page.waitForTimeout(250);
-    expect(await peak(page, 200)).toBeLessThanOrEqual(SILENT);
+    await untilSilent(page, 'ambient group off');
     await page.getByTestId('ambient').click();
     await handle(page, 'AMBIENT_OFF');
     await page.waitForTimeout(500);
 
     await page.getByTestId('sfx').click(); // sound effects off
-    await handle(page, 'START');
-    await page.waitForTimeout(250);
-    expect(await peak(page, 200), 'effects off').toBeLessThanOrEqual(SILENT);
+    // the effect must really start (a voice is playing into the muted group), or silence would prove nothing
+    const effect = await page.evaluate(
+      (n) => (window as any).__audio.sound.service.buffers.get(n).duration as number,
+      'Matchmaking_Whoosh in',
+    );
+    expect(effect, 'the effect is long enough to still be playing when it is checked').toBeGreaterThan(0.3);
+    await handle(page, 'MATCH', 'yes');
+    expect((await stats(page)).playing, 'the effect started').toBeGreaterThan(0);
+    expect(await peak(page, 250), 'effects off').toBeLessThanOrEqual(SILENT);
     await page.getByTestId('sfx').click();
-    await handle(page, 'START');
+    await handle(page, 'MATCH', 'yes');
     expect(await peak(page)).toBeGreaterThan(LOUD * 0.5);
   });
 

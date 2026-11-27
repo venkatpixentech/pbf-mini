@@ -226,3 +226,12 @@ force the failure by making `Intl.NumberFormat` throw for currency and 2-decimal
 
 Lazy rule, enforced by `npm run check:games` (rule 11): nothing imports the Spine package statically, and only
 `src/core/pixi/wrapper/SpineRuntime.ts` may `import()` it. `import type` is allowed.
+
+## Browser gate (after commit 5f12f78)
+
+- Fresh `npm run build` of all games, then `npm run test:e2e`: 126 passed, 0 failed, run twice (the second with the reworked mute test).
+- The earlier Spine pause failure (`spine.spec.ts` "a paused stage and a hidden tab...") and the audio mute failure did not reproduce: the spine and audio
+  specs also passed 25 of 25 with eight busy node processes competing for the CPU. The cause of the earlier failures is not proven; they happened while an
+  unrelated dev server and other node processes were running. If the Spine pause test fails again, capture `trackTime` per 100 ms before changing any timeout.
+- The audio mute test no longer sleeps for fixed times: it polls the analyser until it is silent after mute, and until it recovers after unmute.
+- Still unverified (no scene uses them): vertical `ScrollBox`, the scrollbar, `scrollTo` and the proximity signals. `--sound` scaffolds the wiring with an empty sound list.
